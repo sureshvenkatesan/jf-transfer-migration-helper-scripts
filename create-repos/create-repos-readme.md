@@ -55,8 +55,12 @@ you can bucket them in  found_in_<filename>.txt , where the <filename> is the na
 python find_repos_in_files_and_bucket_by_type.py
 ```
 Since the customer gave us only the local and virtual repo names , we need to create the repos from:
+```
 ncr/found_in_all_local_repos_in_ncr.txt
 ncr/found_in_all_virtual_repos_in_ncr.txt
+```
+
+
 ---
 
 3. Create the "local" repos in target RT using the [create-repos.sh](https://github.com/shivaraman83/security-entities-migration/blob/main/create-repos.sh) script .
@@ -202,12 +206,12 @@ Ran the following command to create a generic [template.json](template.json) as 
 ```
 jf rt repo-template template.json
 ```
-Verifed creation of the local "cached-*" prefix  repos with --dry-run
+Verify creation of the local "cached-*" prefix  repos using [create_cached_locals_for_all_remotes.sh](create_cached_locals_for_all_remotes.sh) with --dry-run option
 ```
 bash ./create_cached_locals_for_all_remotes.sh ncr template.json --dry-run
 ```
 
-Now create the new cached- locals i.e no --dry-run:
+Then create the new cached-* locals i.e without the  --dry-run:
 ```
 bash ./create_cached_locals_for_all_remotes.sh ncr template.json
 ```
@@ -228,14 +232,14 @@ jf rt transfer-config-merge --include-repos "<Semi-colon seperated list of repos
 ```
 ---
 
-9. Now start the transfer-files of the local repos from source to the target:
+9. Now start the transfer-files for the local repos from source to the target artifactory:
 ```
 nohup sh -c 'export JFROG_CLI_LOG_LEVEL=DEBUG;JFROG_CLI_ERROR_HANDLING=panic;jf rt transfer-files ncr ncratleostest --include-repos "<Semi-colon seperated list of repos>"' &
 
 tail -F ~/nohup.out
 ```
 
-10. If you have to redo the transfer-files for any of the repos you can do:
+10. If you have to redo the transfer-files for any of the repos you can use the "--ignore-state" option:
 
 ```
 nohup sh -c 'export JFROG_CLI_LOG_LEVEL=DEBUG;JFROG_CLI_ERROR_HANDLING=panic;jf rt transfer-files ncr ncratleostest --include-repos "<Semi-colon seperated list of repos>" --ignore-state' &
@@ -245,7 +249,7 @@ nohup sh -c 'export JFROG_CLI_LOG_LEVEL=DEBUG;JFROG_CLI_ERROR_HANDLING=panic;jf 
 [set-replication.sh](https://github.com/shivaraman83/convert-local-to-federated/blob/master/set-replication.sh)
 
 or
-just for  specific "<Semi-colon seperated list of repos>"  using [set-replication-for-given-repos.sh](set-replication-for-given-repos.sh):
+just for  specific `"<Semi-colon seperated list of repos>"`  using [set-replication-for-given-repos.sh](set-replication-for-given-repos.sh):
 ```
 bash -c 'export JFROG_CLI_LOG_LEVEL=DEBUG;JFROG_CLI_ERROR_HANDLING=panic; bash ./set-replication-for-given-repos.sh ncr ncratleostest "<Semi-colon seperated list of repos>" --dry-run'
 
@@ -253,7 +257,7 @@ Then run:
 bash -c 'export JFROG_CLI_LOG_LEVEL=DEBUG;JFROG_CLI_ERROR_HANDLING=panic; bash ./set-replication-for-given-repos.sh ncr ncratleostest "<Semi-colon seperated list of repos>"'
 ```
 
-12. After the transfer-files or the replication between the repos are done , you can  compare the  source repos to the targt repos to identify if all the artifacts/files  have been copied to the target repos using [compare_repo_list_details_in_source_vs_target_rt_after_migration.py](compare_repo_list_details_in_source_vs_target_rt_after_migration.py) which generates the repo comparison summary file [comparison.txt](output/comparison.txt):
+12. After the transfer-files or the replication between the repos are done , you can  compare the  source repos to the target repos to identify if all the artifacts/files  have been copied to the target repos using [compare_repo_list_details_in_source_vs_target_rt_after_migration.py](compare_repo_list_details_in_source_vs_target_rt_after_migration.py) which generates the repo comparison summary file [comparison.txt](output/comparison.txt):
 ```
 
 jf rt curl -X POST "/api/storageinfo/calculate" --server-id=ncr 
@@ -314,9 +318,11 @@ awk '!/-202/' filepaths_nometadatafiles.txt
 
 ```
 
-14. If you have to delete the artifacts in a huge repo , so you can start over the tarnsfer-files for the repo you can use
+14. If you have to delete the artifacts in a huge repo , so you can start over the transfer-files for the repo you can use
 [delete_artifacts_in_repo_in_batches.sh](delete_artifacts_in_repo_in_batches.sh) :
 ```
-bash /Users/sureshv/myCode/bitbucket-ps/usingJFrogCLI/repos/cleanup/delete_artifacts_in_repo_in_batches.sh example-repo-local 3 mill
+bash ./delete_artifacts_in_repo_in_batches.sh <repo_name> <total_artifacts_to_delete_in_batch> artifactory-serverid
+Example:
+bash ./delete_artifacts_in_repo_in_batches.sh example-repo-local 1000 ncr
 ```
 
