@@ -12,10 +12,15 @@ That’s the reason why you see this message -
 But the problem is there are `294` subfolders folders under liquid/BoseCorp/ (  liquid is the conan repo name ).
 
 Got using [generate_jf_cp_cmds_for_subfolders_in_given_root_folder.sh](generate_jf_cp_cmds_for_subfolders_in_given_root_folder/generate_jf_cp_cmds_for_subfolders_in_given_root_folder.sh):
-`bash ./generate_jf_cp_cmds_for_subfolders_in_given_root_folder.sh bosesh liquid  bosesh sureshv-liquid-generic BoseCorp | wc -l `
+
+```
+bash ./generate_jf_cp_cmds_for_subfolders_in_given_root_folder.sh bosesh liquid  bosesh sureshv-liquid-generic BoseCorp | wc -l
+```
 
 So even the following fails:
-`jf rt cp liquid/BoseCorp/  sureshv-liquid-generic/ --flat=false --threads=8 --dry-run=false --server-id bosesh`
+```
+jf rt cp liquid/BoseCorp/  sureshv-liquid-generic/ --flat=false --threads=8 --dry-run=false --server-id bosesh
+```
 
 It fails with:
 ```
@@ -45,7 +50,9 @@ It fails with:
 
 Similarly there is another path liquid/conan-center-index/ which also has `112` sub-folders and that also will fail.
 Got using:
-`bash ./generate_jf_cp_cmds_for_subfolders_in_given_root_folder.sh bosesh liquid  bosesh sureshv-liquid-generic conan-center-index | wc -l `
+```
+bash ./generate_jf_cp_cmds_for_subfolders_in_given_root_folder.sh bosesh liquid  bosesh sureshv-liquid-generic conan-center-index | wc -l
+```
  
  I tried push replication for the `liquid` repo and that also does not seem to work.
 
@@ -61,11 +68,15 @@ Have copied a  test package from the liquid repo to this repo.
 3. Copy `liquid/test` folder  to `sureshv-liquid-generic` 
 4. Transfer  `sureshv-liquid-generic` from source to target using the transfer migration tool.
 
-`jf rt transfer-files  --include-repos "sureshv-liquid-generic" --ignore-state bosesh bosesaas`
+```
+jf rt transfer-files  --include-repos "sureshv-liquid-generic" --ignore-state bosesh bosesaas
+```
 
 5. copy `test` folder from `sureshv-liquid-generic` in target to `sureshv-liquid-test` in target.
 Note: Since it is only one folder , you can copy the entire repo. 
-`jf rt cp sureshv-liquid-generic sureshv-liquid-test --flat=false --threads=8 --dry-run=false --server-id bosesaas`
+```
+jf rt cp sureshv-liquid-generic sureshv-liquid-test --flat=false --threads=8 --dry-run=false --server-id bosesaas
+```
 
 6. export the `sureshv-liquid-test` repos in source and target and compare in `meld`  to see if they are same.
 ```
