@@ -38,5 +38,17 @@ IFS=$'\n' read -rd '' -a folders_array <<< "$folders"
 
 # Loop through the folders and generate the jf rt cp commands
 for folder in "${folders_array[@]}"; do
-    echo "jf rt cp $source_repo$folder/ $target_repo/ --flat=false --threads=8 --dry-run=false --server-id $target_artifactory"
+
+    # Check if the folder name is ".conan" and skip it
+    if [ "$folder" = "/.conan" ]; then
+        continue  # Skip this iteration of the loop
+    fi
+
+    #echo "jf rt cp $source_repo$folder/ $target_repo/ --flat=false --threads=8 --dry-run=false --server-id $target_artifactory"
+    if [ -z "$root_folder" ]; then
+        cp_command="jf rt cp $source_repo$folder/ $target_repo/ --flat=false --threads=8 --dry-run=false --server-id $target_artifactory"
+    else
+        cp_command="jf rt cp $source_repo/$root_folder$folder/ $target_repo/ --flat=false --threads=8 --dry-run=false --server-id $target_artifactory"
+    fi
+    echo $cp_command
 done

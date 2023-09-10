@@ -95,8 +95,9 @@ The source and target folders were identical.
 Now I do not need the `sureshv-liquid-test` conan repo as I can start copying from the  liquid repo to the `sureshv-liquid-generic` in source and follow the above steps.
 
 
-Do the copy  folder by folder like  `step 3` above , to that you can do the steps 4,5,6 after that:
-Note: For the `conan` repo you dont have to copy the liquid/.conan folder as it will  automatically be created in `step 5` above and the 
+Do the copy,   folder by folder like  `step 3` above , so that you can do the steps 4,5,6 after that:
+
+Note: For the `conan` repo you don't have to copy the liquid/.conan folder as it will  automatically be created in `step 5` above and the 
 `liquid/.conan/packages.ref.json` containing the conan package manifest will also be generated  as packages get copied to the conan repo ( that is the default conan repo behavior).
 
 ```
