@@ -11,7 +11,7 @@ That’s the reason why you see this message -
 ```
 But the problem is there are `294` subfolders folders under liquid/BoseCorp/ (  liquid is the conan repo name ).
 
-Got using:
+Got using [generate_jf_cp_cmds_for_subfolders_in_given_root_folder.sh](generate_jf_cp_cmds_for_subfolders_in_given_root_folder/generate_jf_cp_cmds_for_subfolders_in_given_root_folder.sh):
 `bash ./generate_jf_cp_cmds_for_subfolders_in_given_root_folder.sh bosesh liquid  bosesh sureshv-liquid-generic BoseCorp | wc -l `
 
 So even the following fails:
@@ -79,7 +79,7 @@ The source and target folders were identical.
 
 ---
 
-##Here is the plan I have for migrating the 1.5TB liquid repo:
+## Here is the plan I have for migrating the 1.5TB liquid repo:
 
 Now I do not need the `sureshv-liquid-test` conan repo as I can start copying from the  liquid repo to the `sureshv-liquid-generic` in source and follow the above steps.
 
@@ -126,7 +126,11 @@ jf rt cp sureshv-liquid-generic/test/  liquid/ --flat=false --threads=8 --dry-ru
 But we know that for the big folders  like `sureshv-liquid-generic/BoseCorp/` and `sureshv-liquid-generic/conan-center-index/`  it will fail.
 
 For this or any root-folder to copy the subfolders recurseively I have the 
-`copy_subfolders_in_given_root_folder_from_source_repo_to_generic_target_repo_in_parallel.sh` script.
+[copy_subfolders_in_given_root_folder_from_source_repo_to_generic_target_repo_in_parallel.sh](copy_sub_folders_in_parallel/copy_subfolders_in_given_root_folder_from_source_repo_to_generic_target_repo_in_parallel.sh) script as mentioned in 
+[copy_sub_folders_in_parallel/readme.md](copy_sub_folders_in_parallel/readme.md)
+
+---
+
 
 
 
