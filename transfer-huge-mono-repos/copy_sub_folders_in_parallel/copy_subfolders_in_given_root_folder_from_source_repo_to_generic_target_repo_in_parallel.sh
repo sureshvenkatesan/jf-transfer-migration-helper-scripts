@@ -61,8 +61,12 @@ run_cp_command() {
         return
     fi
 
-    # Update the progress
-    echo "Running command: $cp_command [Progress: $folder_position out of $total_folders folders]" >> "$all_commands_file"
+    # Log what is currently running only if we did not log it earlier.
+    # If you stopped the script, no need to log it again , we can always check waht is running using 
+    # ps -ef | grep "jf rt cp"
+    if ! grep -q "$folder_to_copy" "$all_commands_file"; then
+        echo "Running command: $cp_command [Progress: $folder_position out of $total_folders folders]" >> "$all_commands_file"
+    fi
     
 
 
