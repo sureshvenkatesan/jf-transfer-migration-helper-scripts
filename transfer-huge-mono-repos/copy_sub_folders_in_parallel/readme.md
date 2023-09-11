@@ -5,7 +5,7 @@ a) 5 subfolders  at a  time from liquid repo to  sureshv-liquid-generic repo in 
 Usage:
 example:
 
-bash ./copy_subfolders_in_given_root_folder_from_source_repo_to_generic_target_repo_in_parallel.sh <source artifactory> <source repo>  <target artifactory> <target repo> <root-folder to copy from source repo to target>
+bash ./copy_subfolders_in_given_root_folder_from_source_repo_to_generic_target_repo_in_parallel.sh <source artifactory> <source repo>  <target artifactory> <target repo> [<root-folder to copy from source repo to target>]
 
 Example:
 In /Users/sureshv/Documents/From_Customer/Bose/tests

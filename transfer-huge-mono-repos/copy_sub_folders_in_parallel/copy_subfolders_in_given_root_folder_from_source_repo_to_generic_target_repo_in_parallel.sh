@@ -1,5 +1,3 @@
-In the below script , if I exit the command in between, I want to skip the copy commands  for folders already in the already in successful_commands_file and do the copy for the remaining  folders in the folders_array
-
 #!/bin/bash
 
 # Check if at least the first four required parameters are provided
@@ -36,12 +34,13 @@ IFS=$'\n' read -rd '' -a folders_array <<< "$folders"
 
 # Calculate the total number of folders
 total_folders="${#folders_array[@]}"
-processed_folders=0
+
 
 # Log failed, successful, and all commands to separate files
 failed_commands_file="failed_commands.txt"
 successful_commands_file="successful_commands.txt"
 all_commands_file="all_commands.txt"
+skipped_commands_file="skipped_commands.txt"
 
 touch "$successful_folders_file"
 
@@ -53,17 +52,19 @@ touch "$successful_folders_file"
 run_cp_command() {
     cp_command="$1"
     folder_to_copy="$2"
-
-    # Update the progress
-    processed_folders=$((processed_folders + 1))
-    echo "Running command: $cp_command [Progress: $processed_folders out of $total_folders folders]" >> "$all_commands_file"
-    
+    folder_position="$3"  # Pass the folder position as an argument
     # Check if the folder has already been successfully copied
-    if grep -q "^$folder_to_copy$" "$successful_folders_file"; then
+
+    if grep -q "$folder_to_copy" "$successful_commands_file"; then
         # Note: we just echo it. No need to log it to  "$all_commands_file"
-        echo "Skipping folder: $folder_to_copy (already copied)"
+        echo "Skipping folder: $folder_to_copy (already copied)" >> "$skipped_commands_file"
         return
     fi
+
+    # Update the progress
+    echo "Running command: $cp_command [Progress: $folder_position out of $total_folders folders]" >> "$all_commands_file"
+    
+
 
     # Run the command and capture the exit status and error output
     #error_output=$(eval "$cp_command" 2>&1 >/dev/tty)
@@ -75,11 +76,9 @@ run_cp_command() {
     error_code=$?
 
     if [ $error_code -eq 0 ]; then
-        echo "Command succeeded: $cp_command (Exit Status: $error_code) [Progress: $processed_folders out of $total_folders folders]" >> "$successful_commands_file"
-        # Record the successfully copied folder
-        echo "$folder_to_copy" >> "$successful_folders_file"
+        echo "Command succeeded: $cp_command (Exit Status: $error_code) [Progress: $folder_position out of $total_folders folders]" >> "$successful_commands_file"
     else
-        echo "Command failed: $cp_command (Exit Status: $error_code) [Progress: $processed_folders out of $total_folders folders]" >> "$failed_commands_file"
+        echo "Command failed: $cp_command (Exit Status: $error_code) [Progress: $folder_position out of $total_folders folders]" >> "$failed_commands_file"
         #echo "Error Message: $error_output" >> "$failed_commands_file"
     fi
 }
@@ -87,7 +86,8 @@ run_cp_command() {
 
 
 # Loop through the folders and generate the jf rt cp commands
-for folder in "${folders_array[@]}"; do
+for folder_position in "${!folders_array[@]}"; do
+    folder="${folders_array[$folder_position]}"
     # Check if the folder name is ".conan" and skip it as it will be generated
     if [ "$folder" = "/.conan" ]; then
         continue  # Skip this iteration of the loop
@@ -95,10 +95,10 @@ for folder in "${folders_array[@]}"; do
 
     if [ -z "$root_folder" ]; then
         cp_command="jf rt cp $source_repo$folder/ $target_repo/ --flat=false --threads=8 --dry-run=false --server-id $target_artifactory"
-        run_cp_command "$cp_command" "$source_repo$folder/" &
+        run_cp_command "$cp_command" "$source_repo$folder/" "$((folder_position + 1))" &
     else
         cp_command="jf rt cp $source_repo/$root_folder$folder/ $target_repo/ --flat=false --threads=8 --dry-run=false --server-id $target_artifactory"
-        run_cp_command "$cp_command" "$source_repo/$root_folder$folder/" &
+        run_cp_command "$cp_command" "$source_repo/$root_folder$folder/" "$((folder_position + 1))" &
     fi
 
     
