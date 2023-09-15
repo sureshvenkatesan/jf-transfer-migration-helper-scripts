@@ -79,7 +79,7 @@ run_migrate_command() {
         elif [ "${TRANSFERONLY}" = "yes" ]; then
             while IFS= read -r line
             do
-                echo "jf rt dl \"$source_repo/$line\" . --server-id $source_artifactory ; jf rt u \"$line\" \"$target_repo/$line\" --server-id $target_artifactory ; rm -rf \"$line\" "
+                echo "jf rt dl \"$source_repo/$line\" . --threads=8 --server-id $source_artifactory ; jf rt u \"$line\" \"$target_repo/$line\" --threads=8 --server-id $target_artifactory ; rm -rf \"$line\" "
                 #jf rt dl \"$1/$line\" . --server-id $SOURCE_ID ; jf rt u \"$line\" \"$1/$line\" --server-id $TARGET_ID ; rm -f \"$line\"
             done < "c"
         else 
@@ -133,9 +133,9 @@ fi
 
 # Run the jf rt curl command and capture the output into a variable
 if [ -z "$root_folder" ]; then
-    output=$(jf rt curl -k -XGET "/api/storage/$source_repo?list&deep=1&depth=1&listFolders=1" --server-id $source_artifactory)
+    output=$(jf rt curl -s -k -XGET "/api/storage/$source_repo?list&deep=1&depth=1&listFolders=1" --server-id $source_artifactory)
 else
-    output=$(jf rt curl -k -XGET "/api/storage/$source_repo/$root_folder?list&deep=1&depth=1&listFolders=1" --server-id $source_artifactory)
+    output=$(jf rt curl -s -k -XGET "/api/storage/$source_repo/$root_folder?list&deep=1&depth=1&listFolders=1" --server-id $source_artifactory)
 fi
 
 # Parse the JSON output using jq and get the "uri" values for folders
@@ -161,73 +161,135 @@ total_folders="$(expr "${#folders_array[@]}" + 1)"
 
 
 
+if [ "${TRANSFERONLY}" = "yes" ]; then
+
+    # Loop through the folders and generate the jf rt cp commands
+    for folder_position in "${!folders_array[@]}"; do
+        folder="${folders_array[$folder_position]}"
+        #Remove the leading slash i.e if folder is "/abc" it becomes "abc"
+        folder="${folder#/}"
+        # Check if the folder name is ".conan" and skip it as it will be generated
+        if [ "$folder" = ".conan" ]; then
+            continue  # Skip this iteration of the loop
+        fi
 
 
-# Loop through the folders and generate the jf rt cp commands
-for folder_position in "${!folders_array[@]}"; do
-    folder="${folders_array[$folder_position]}"
-    #Remove the leading slash i.e if folder is "/abc" it becomes "abc"
-    folder="${folder#/}"
-    # Check if the folder name is ".conan" and skip it as it will be generated
-    if [ "$folder" = ".conan" ]; then
-        continue  # Skip this iteration of the loop
-    fi
+        src_list_command=""
+        target_list_command=""
 
 
-    src_list_command=""
-    target_list_command=""
+        if [ -z "$root_folder" ]; then
+        folder_to_migrate="$folder"
+        else
+            folder_to_migrate="$root_folder/$folder"
+        fi
 
+        src_command1="jf rt curl -s -XPOST -H 'Content-Type: text/plain' api/search/aql --server-id $source_artifactory --insecure \
+        --data 'items.find({\"repo\":  {\"\$eq\":\"$source_repo\"}, \"path\": {\"\$match\": \"$folder_to_migrate\"},\
+            \"type\": \"file\"}).include(\"repo\",\"path\",\"name\",\"sha256\")'"
+        
 
-    if [ -z "$root_folder" ]; then
-       folder_to_migrate="$folder"
-    else
-        folder_to_migrate="$root_folder/$folder"
-    fi
+        target_command1="jf rt curl -s -XPOST -H 'Content-Type: text/plain' api/search/aql --server-id $target_artifactory --insecure \
+        --data 'items.find({\"repo\":  {\"\$eq\":\"$target_repo\"}, \"path\": {\"\$match\": \"$folder_to_migrate\"},\
+            \"type\": \"file\"}).include(\"repo\",\"path\",\"name\",\"sha256\")'"
 
-    src_command1="jf rt curl -s -XPOST -H 'Content-Type: text/plain' api/search/aql --server-id $source_artifactory --insecure \
-    --data 'items.find({\"repo\":  {\"\$eq\":\"$source_repo\"}, \"path\": {\"\$match\": \"$folder_to_migrate\"},\
-        \"type\": \"file\"}).include(\"repo\",\"path\",\"name\",\"sha256\")'"
-    
+            # Concatenate the two commands 
+        src_list_in_this_folder_command="$src_command1 $jq_sed_command"
+        target_list_in_this_folder_command="$target_command1 $jq_sed_command"
+        
+    #     echo $src_list_command
+    #    echo $target_list_command
 
-    target_command1="jf rt curl -s -XPOST -H 'Content-Type: text/plain' api/search/aql --server-id $target_artifactory --insecure \
-    --data 'items.find({\"repo\":  {\"\$eq\":\"$target_repo\"}, \"path\": {\"\$match\": \"$folder_to_migrate\"},\
-        \"type\": \"file\"}).include(\"repo\",\"path\",\"name\",\"sha256\")'"
+        #Call the migrate command without the trailing * in $folder_to_migrate
+        #folder_to_migrate="${folder_to_migrate/%\*/}"  # Remove the trailing "*"
+        run_migrate_command "$src_list_in_this_folder_command" "$target_list_in_this_folder_command" "$folder_to_migrate" "$((folder_position+1))" "$total_folders"
+
+    # Now check in the subfolders:
+
+        src_command2="jf rt curl -s -XPOST -H 'Content-Type: text/plain' api/search/aql --server-id $source_artifactory --insecure \
+        --data 'items.find({\"repo\":  {\"\$eq\":\"$source_repo\"}, \"path\": {\"\$match\": \"$folder_to_migrate/*\"},\
+            \"type\": \"file\"}).include(\"repo\",\"path\",\"name\",\"sha256\")'"
+        
+
+        target_command2="jf rt curl -s -XPOST -H 'Content-Type: text/plain' api/search/aql --server-id $target_artifactory --insecure \
+        --data 'items.find({\"repo\":  {\"\$eq\":\"$target_repo\"}, \"path\": {\"\$match\": \"$folder_to_migrate/*\"},\
+            \"type\": \"file\"}).include(\"repo\",\"path\",\"name\",\"sha256\")'"
 
         # Concatenate the two commands 
-    src_list_in_this_folder_command="$src_command1 $jq_sed_command"
-    target_list_in_this_folder_command="$target_command1 $jq_sed_command"
-    
-#     echo $src_list_command
-#    echo $target_list_command
+        src_list_in_subfolders_command="$src_command2 $jq_sed_command"
+        target_list_in_subfolders_command="$target_command2 $jq_sed_command"
 
-    #Call the migrate command without the trailing * in $folder_to_migrate
-    #folder_to_migrate="${folder_to_migrate/%\*/}"  # Remove the trailing "*"
-    run_migrate_command "$src_list_in_this_folder_command" "$target_list_in_this_folder_command" "$folder_to_migrate" "$((folder_position+1))" "$total_folders"
+    #Call the migrate command with the trailing * in $folder_to_migrate
+        #folder_to_migrate="${folder_to_migrate/%\*/}"  # Remove the trailing "*"
+        run_migrate_command "$src_list_in_subfolders_command" "$target_list_in_subfolders_command" "$folder_to_migrate" "$((folder_position+1))" "$total_folders"
 
-   # Now check in the subfolders:
+        # Limit to 5 parallel commands
+        # if [[ $(jobs | wc -l) -ge 5 ]]; then
+        #     wait -n
+        # fi
+    done | parallel -j 8
+else
+   # Loop through the folders and generate the jf rt cp commands
+    for folder_position in "${!folders_array[@]}"; do
+        folder="${folders_array[$folder_position]}"
+        #Remove the leading slash i.e if folder is "/abc" it becomes "abc"
+        folder="${folder#/}"
+        # Check if the folder name is ".conan" and skip it as it will be generated
+        if [ "$folder" = ".conan" ]; then
+            continue  # Skip this iteration of the loop
+        fi
 
-    src_command2="jf rt curl -s -XPOST -H 'Content-Type: text/plain' api/search/aql --server-id $source_artifactory --insecure \
-    --data 'items.find({\"repo\":  {\"\$eq\":\"$source_repo\"}, \"path\": {\"\$match\": \"$folder_to_migrate/*\"},\
-        \"type\": \"file\"}).include(\"repo\",\"path\",\"name\",\"sha256\")'"
-    
 
-    target_command2="jf rt curl -s -XPOST -H 'Content-Type: text/plain' api/search/aql --server-id $target_artifactory --insecure \
-    --data 'items.find({\"repo\":  {\"\$eq\":\"$target_repo\"}, \"path\": {\"\$match\": \"$folder_to_migrate/*\"},\
-        \"type\": \"file\"}).include(\"repo\",\"path\",\"name\",\"sha256\")'"
+        src_list_command=""
+        target_list_command=""
 
-    # Concatenate the two commands 
-    src_list_in_subfolders_command="$src_command2 $jq_sed_command"
-    target_list_in_subfolders_command="$target_command2 $jq_sed_command"
 
-   #Call the migrate command with the trailing * in $folder_to_migrate
-    #folder_to_migrate="${folder_to_migrate/%\*/}"  # Remove the trailing "*"
-    run_migrate_command "$src_list_in_subfolders_command" "$target_list_in_subfolders_command" "$folder_to_migrate" "$((folder_position+1))" "$total_folders"
+        if [ -z "$root_folder" ]; then
+        folder_to_migrate="$folder"
+        else
+            folder_to_migrate="$root_folder/$folder"
+        fi
 
-    # Limit to 5 parallel commands
-    # if [[ $(jobs | wc -l) -ge 5 ]]; then
-    #     wait -n
-    # fi
-done | parallel -j 8
+        src_command1="jf rt curl -s -XPOST -H 'Content-Type: text/plain' api/search/aql --server-id $source_artifactory --insecure \
+        --data 'items.find({\"repo\":  {\"\$eq\":\"$source_repo\"}, \"path\": {\"\$match\": \"$folder_to_migrate\"},\
+            \"type\": \"file\"}).include(\"repo\",\"path\",\"name\",\"sha256\")'"
+        
+
+        target_command1="jf rt curl -s -XPOST -H 'Content-Type: text/plain' api/search/aql --server-id $target_artifactory --insecure \
+        --data 'items.find({\"repo\":  {\"\$eq\":\"$target_repo\"}, \"path\": {\"\$match\": \"$folder_to_migrate\"},\
+            \"type\": \"file\"}).include(\"repo\",\"path\",\"name\",\"sha256\")'"
+
+            # Concatenate the two commands 
+        src_list_in_this_folder_command="$src_command1 $jq_sed_command"
+        target_list_in_this_folder_command="$target_command1 $jq_sed_command"
+        
+    #     echo $src_list_command
+    #    echo $target_list_command
+
+        #Call the migrate command without the trailing * in $folder_to_migrate
+        #folder_to_migrate="${folder_to_migrate/%\*/}"  # Remove the trailing "*"
+        run_migrate_command "$src_list_in_this_folder_command" "$target_list_in_this_folder_command" "$folder_to_migrate" "$((folder_position+1))" "$total_folders"
+
+    # Now check in the subfolders:
+
+        src_command2="jf rt curl -s -XPOST -H 'Content-Type: text/plain' api/search/aql --server-id $source_artifactory --insecure \
+        --data 'items.find({\"repo\":  {\"\$eq\":\"$source_repo\"}, \"path\": {\"\$match\": \"$folder_to_migrate/*\"},\
+            \"type\": \"file\"}).include(\"repo\",\"path\",\"name\",\"sha256\")'"
+        
+
+        target_command2="jf rt curl -s -XPOST -H 'Content-Type: text/plain' api/search/aql --server-id $target_artifactory --insecure \
+        --data 'items.find({\"repo\":  {\"\$eq\":\"$target_repo\"}, \"path\": {\"\$match\": \"$folder_to_migrate/*\"},\
+            \"type\": \"file\"}).include(\"repo\",\"path\",\"name\",\"sha256\")'"
+
+        # Concatenate the two commands 
+        src_list_in_subfolders_command="$src_command2 $jq_sed_command"
+        target_list_in_subfolders_command="$target_command2 $jq_sed_command"
+
+    #Call the migrate command with the trailing * in $folder_to_migrate
+        #folder_to_migrate="${folder_to_migrate/%\*/}"  # Remove the trailing "*"
+        run_migrate_command "$src_list_in_subfolders_command" "$target_list_in_subfolders_command" "$folder_to_migrate" "$((folder_position+1))" "$total_folders"
+    done
+fi
 
 # Loop through the folders and delete the folders
 for folder_position in "${!folders_array[@]}"; do
@@ -239,16 +301,34 @@ for folder_position in "${!folders_array[@]}"; do
         continue  # Skip this iteration of the loop
     fi
 
+    if [ -z "$root_folder" ]; then
+    folder_to_migrate="$folder"
+    else
+        folder_to_migrate="$root_folder/$folder"
+    fi
+
     # Check if the folder exists
-    if [ -d "$folder" ]; then
+    if [ -d "$folder_to_migrate" ]; then
         # Check if the folder is empty
-        if [ -z "$(find "$folder" -type f 2>/dev/null)" ]; then
-            echo "Folder '$folder' is empty, removing..."
-            rm -rf "$folder"
+        if [ -z "$(find "$folder_to_migrate" -type f 2>/dev/null)" ]; then
+            echo "Folder '$folder_to_migrate' is empty, removing..."
+            rm -rf "$folder_to_migrate"
         else
-            echo "Folder '$folder' is not empty."
+            echo "Folder '$folder_to_migrate' is not empty."
             # Add additional actions for non-empty folders here if needed
         fi
     fi
 
 done
+
+if [ -d "$root_folder" ]; then
+    # Check if the folder is empty
+    if [ -z "$(find "$root_folder" -type f 2>/dev/null)" ]; then
+        echo "Folder '$root_folder' is empty, removing..."
+        rm -rf "$root_folder"
+    else
+        echo "Folder '$root_folder' is not empty."
+        # Add additional actions for non-empty folders here if needed
+    fi
+fi
+
