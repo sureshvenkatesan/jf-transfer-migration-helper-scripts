@@ -145,19 +145,7 @@ folders=$(echo "$output" | jq -r '.files[] | select(.folder) | .uri')
 IFS=$'\n' read -rd '' -a folders_array <<< "$folders"
 
 # Calculate the total number of folders
-# total_folders="${#folders_array[@]}"
 total_folders="$(expr "${#folders_array[@]}" + 1)"
-
-
-
-
-# touch "$successful_folders_file"
-
-# Function to run the jf rt cp command and log any failures
-# The eval command is used to execute the cp_command, and the standard error (error stream) is redirected to standard output (2>&1).
-# If the eval command succeeds (i.e., the exit status is zero), it's considered a successful command, and the function logs "Command succeeded."
-# If the eval command fails (i.e., the exit status is non-zero), it's considered a failed command, and the function logs "Command failed" along with the exit status and any error message captured from the error stream.
-
 
 
 
