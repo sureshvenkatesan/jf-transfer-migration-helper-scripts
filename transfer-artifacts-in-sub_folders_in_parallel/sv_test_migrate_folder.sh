@@ -79,7 +79,7 @@ run_migrate_command() {
         elif [ "${TRANSFERONLY}" = "yes" ]; then
             while IFS= read -r line
             do
-                echo "jf rt dl \"$source_repo/$line\" . --threads=8 --server-id $source_artifactory ; jf rt u \"$line\" \"$target_repo/$line\" --threads=8 --server-id $target_artifactory ; rm -rf \"$line\" "
+                echo "jf rt dl \"$source_repo/$line\" . --threads=8 --server-id $source_artifactory ; jf rt u \"$line\" \"$target_repo/$line\" --threads=8 --server-id $target_artifactory ; rm -rf \"$line\" "$'\n'
                 #jf rt dl \"$1/$line\" . --server-id $SOURCE_ID ; jf rt u \"$line\" \"$1/$line\" --server-id $TARGET_ID ; rm -f \"$line\"
             done < "c"
         else 
@@ -151,7 +151,7 @@ total_folders="$(expr "${#folders_array[@]}" + 1)"
 
 if [ "${TRANSFERONLY}" = "yes" ]; then
 
-    # Loop through the folders and generate the jf rt cp commands
+    # Loop through the folders and generate the jf rt  commands
     for folder_position in "${!folders_array[@]}"; do
         folder="${folders_array[$folder_position]}"
         #Remove the leading slash i.e if folder is "/abc" it becomes "abc"
@@ -215,7 +215,7 @@ if [ "${TRANSFERONLY}" = "yes" ]; then
         # if [[ $(jobs | wc -l) -ge 5 ]]; then
         #     wait -n
         # fi
-    done | parallel -j 8
+    done #| parallel -j 8
 else
    # Loop through the folders and generate the jf rt cp commands
     for folder_position in "${!folders_array[@]}"; do
