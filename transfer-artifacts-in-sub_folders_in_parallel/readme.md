@@ -1,5 +1,6 @@
 ## Readme for [sv_test_migrate_folder.sh](sv_test_migrate_folder.sh)
 
+The script is improved from [transfer.s](https://git.jfrog.info/projects/PROFS/repos/ps_jfrog_scripts/browse/transfer-artifacts/transfer.sh)
 Script for migrating folders directly from usvartifactory5 liquid  to jfrogio liquid ( conan) repo . It has a dependency on the "jq" utility .
 Please install jq on usvartifactory5 as mentioned in https://www.cyberithub.com/how-to-install-jq-json-processor-on-rhel-centos-7-8/ :
 ```
@@ -24,4 +25,6 @@ Every time you  run the script by specifying a folder it will first do a diff be
 
   bash /Users/sureshv/myCode/github-sv/jf-transfer-migration-helper-scripts/transfer-artifacts-in-sub_folders_in_parallel/1.sh bosesh sureshv-liquid-generic bosesaas sureshv-liquid-test yes  test
 ```
+
+---
 
