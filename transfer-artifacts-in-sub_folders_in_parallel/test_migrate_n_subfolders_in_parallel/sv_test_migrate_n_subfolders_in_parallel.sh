@@ -41,24 +41,8 @@ execute_artifact_migration() {
     # Save the current directory to a variable
     local current_dir="$(pwd)"
 
-    # Initialize a variable to keep track of command failures
-    local command_failures=0
 
 
-
-    #  # Download artifact
-    # jf rt dl "$source_repo/$line" . --threads=8 --server-id "$source_artifactory"
-    # if [ $? -ne 0 ]; then
-    #     echo "Download command failed for: $source_repo/$line" >> "$current_dir/$failed_commands_file"
-    #     command_failures=$((command_failures+1))
-    # fi
-
-    # # Upload artifact
-    # jf rt u "$line" "$target_repo/$line" --threads=8 --server-id "$target_artifactory"
-    # if [ $? -ne 0 ]; then
-    #     echo "Upload command failed for: $source_repo/$line" >> "$current_dir/$failed_commands_file"
-    #     command_failures=$((command_failures+1))
-    # fi
     # Check if the length of the trimmed $escaped_modified_json is greater than 1 , i.e artifact has a property
     if [ ${#escaped_modified_json} -gt 1 ]; then
         # Execute the commands for a single artifact 
@@ -89,18 +73,6 @@ execute_artifact_migration() {
             echo "All commands succeeded for: $source_repo/$line" >> "$current_dir/$successful_commands_file"
         fi
     fi
-    # # Remove command
-    # rm -rf "$line"
-    # if [ $? -ne 0 ]; then
-    #     echo "Remove command failed for: $source_repo/$line" >> "$current_dir/$failed_commands_file"
-    #         command_failures=$((command_failures+1))
-    # fi
-
-
-#    # Check if there were any command failures
-#     if [ $command_failures -eq 0 ]; then
-#         echo "All commands succeeded for: $source_repo/$line" >> "$current_dir/$successful_commands_file"
-#     fi
 }
 
 
@@ -203,14 +175,10 @@ run_migrate_command() {
         else 
             echo "Wrong 5th Parameter, 5th parameter value should be yes or no"
         fi 
-        # Wait for background jobs to complete
+        # Wait for execute_artifact_migration background jobs to complete
         wait
        rm -f "$a" "$b" "$c"
     fi
-   
-
-
-
 }
 
 
@@ -227,7 +195,7 @@ run_migration_for_folder() {
         run_migrate_command "$src_list_command" "$target_list_command" "$folder_to_migrate" "$folder_position" "$sibling_folder_count"
     ) &
 
-    # Check the number of background jobs and wait for them to complete if it exceeds 5
+    # Check the number of background run_migrate_command jobs and wait for them to complete if it exceeds 5
     job_count=$(jobs -p | wc -l)
     if [ $job_count -ge 5 ]; then
         wait
@@ -340,18 +308,20 @@ for folder_position in "${!folders_array[@]}"; do
     run_migration_for_folder "$src_list_in_subfolders_command" "$target_list_in_subfolders_command" "$folder_to_migrate" "$((folder_position+1))" "$total_folders"
 
     # Check if the folder exists
-    echo "1st  for loop In $(pwd) - Checking Folder $((folder_position+1))/$folder_to_migrate is empty . If empty remove. ---->" >> "$failed_commands_file"
-    echo "$(du -sh $((folder_position+1))/$folder_to_migrate)" >> "$failed_commands_file"
-    echo "$(ls -al $((folder_position+1))/$folder_to_migrate)" >> "$failed_commands_file"
+    # echo "1st  for loop In $(pwd) - Checking Folder $((folder_position+1))/$folder_to_migrate is empty . If empty remove. ---->" >> "$failed_commands_file"
+    # echo "$(du -sh $((folder_position+1))/$folder_to_migrate)" >> "$failed_commands_file"
+    # echo "$(ls -al $((folder_position+1))/$folder_to_migrate)" >> "$failed_commands_file"
 done 
 
-# Wait for any remaining background jobs to complete
+# Wait for any remaining run_migration_for_folder background jobs to complete
 wait
 
-echo "Before sleep $( ps -ef | grep -i merlin)" >> "$failed_commands_file"
+# echo "Before sleep $( ps -ef | grep -i merlin)" >> "$failed_commands_file"
 # sleep 30
 # echo "After sleep , $( ps -ef | grep -i merlin)" >> "$failed_commands_file"
-# Loop through the folders and delete the folders
+# Loop through the folders numbered >=1  i.e output/1 , output/2 .. and delete the folders .
+# The files in folder 0 are artifacts so are already deleted.
+# So folder 0 should already be empty.
 for folder_position in "${!folders_array[@]}"; do
     folder="${folders_array[$folder_position]}"
     #Remove the leading slash i.e if folder is "/abc" it becomes "abc"
@@ -368,14 +338,14 @@ for folder_position in "${!folders_array[@]}"; do
     fi
 
     # Check if the folder exists
-    echo "2nd for loop In $(pwd) - Checking Folder $((folder_position+1))/$folder_to_migrate is empty . If empty remove. ---->" >> "$failed_commands_file"
-    echo "$(du -sh $((folder_position+1))/$folder_to_migrate)" >> "$failed_commands_file"
-    echo "$(ls -al $((folder_position+1))/$folder_to_migrate)" >> "$failed_commands_file"
+    # echo "2nd for loop In $(pwd) - Checking Folder $((folder_position+1))/$folder_to_migrate is empty . If empty remove. ---->" >> "$failed_commands_file"
+    # echo "$(du -sh $((folder_position+1))/$folder_to_migrate)" >> "$failed_commands_file"
+    # echo "$(ls -al $((folder_position+1))/$folder_to_migrate)" >> "$failed_commands_file"
 
     if [ -d "$((folder_position+1))/$folder_to_migrate" ]; then
         # Check if the folder is empty
-        #if [ -z "$(find $((folder_position+1))/$folder_to_migrate -type f 2>/dev/null)" ]; then
-        if [ "$(du -s $((folder_position+1))/$folder_to_migrate | awk '{print $1}')" -eq 0 ]; then
+        if [ -z "$(find $((folder_position+1))/$folder_to_migrate -type f 2>/dev/null)" ]; then
+        #if [ "$(du -s $((folder_position+1))/$folder_to_migrate | awk '{print $1}')" -eq 0 ]; then
             echo "Folder $((folder_position+1))/$folder_to_migrate is empty, removing..." >> "$successful_commands_file"
             rm -rf "$((folder_position+1))/$folder_to_migrate"
         else
