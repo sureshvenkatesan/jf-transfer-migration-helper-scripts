@@ -5,7 +5,7 @@
 ## Description
 
 This Bash script monitors the growth of log files within a specified directory for a custom-defined period of time. It allows you to check whether the log files have increased in size during the specified time frame.
-Purpose :  to determine if your script that writes to the log file has completed.
+Purpose :  to determine if your script that writes to the log file has completed, as the log file did not grow.
 
 
 ## Usage

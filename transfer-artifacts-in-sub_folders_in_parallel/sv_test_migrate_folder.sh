@@ -49,7 +49,7 @@ run_migrate_command() {
     # Run the command
     # echo $src_list_command
     # Enable debugging
-#  set -x
+    #  set -x
     eval "$src_list_command >> a" 
     src_exit_status=$?
 
@@ -66,7 +66,7 @@ run_migrate_command() {
         echo "Error: Command failed for folder: $folder_to_migrate - Run Command: $target_list_command" >> "$failed_commands_file"
     fi
     # Disable debugging when no longer needed
-#  set +x
+    #  set +x
     if [ $src_exit_status -eq 0 ] && [ $target_exit_status -eq 0 ]; then
 
         join -v1  <(sort a) <(sort b) | sed -re 's/,[[:alnum:]]+"$/"/g' |sed 's/"//g' > c
@@ -107,7 +107,7 @@ run_migrate_command() {
 
                         # echo "jf rt curl -k -sL -XPATCH -H 'Content-Type: application/json' '/api/metadata/$target_repo/$line?atomicProperties=1' --server-id $target_artifactory -d '$modified_json'"$'\n' >> properties_patch.txt
 
-                        echo "jf rt curl -k -sL -XPATCH -H \"Content-Type: application/json\" \"/api/metadata/$target_repo/$line?atomicProperties=1\" --server-id $target_artifactory -d \"$escaped_modified_json\""$'\n' >> properties_patch.txt
+                        # echo "jf rt curl -k -sL -XPATCH -H \"Content-Type: application/json\" \"/api/metadata/$target_repo/$line?atomicProperties=1\" --server-id $target_artifactory -d \"$escaped_modified_json\""$'\n' >> properties_patch.txt
                         # So run the commands in properties_patch.txt in the end after all the artifacts are uploaded to target.
 
                         echo "jf rt dl \"$source_repo/$line\" . --threads=8 --server-id $source_artifactory ; jf rt u \"$line\" \"$target_repo/$line\" --threads=8 --server-id $target_artifactory ; jf rt curl -k -sL -XPATCH -H \"Content-Type: application/json\" \"/api/metadata/$target_repo/$line?atomicProperties=1\" --server-id $target_artifactory -d \"$escaped_modified_json\"; rm -rf \"$line\" "$'\n' 
