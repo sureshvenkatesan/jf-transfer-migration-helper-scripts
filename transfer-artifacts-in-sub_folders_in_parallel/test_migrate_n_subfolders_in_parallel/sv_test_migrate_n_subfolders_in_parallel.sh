@@ -52,7 +52,7 @@ execute_artifact_migration() {
         jf rt curl -k -sL -XPATCH -H "Content-Type: application/json" "/api/metadata/$target_repo/$line?atomicProperties=1" \
          --server-id "$target_artifactory" -d "$escaped_modified_json" && \
         #echo "In $(pwd). Now removing $line ----------------->" && \
-        rm -rf "$line" && \        
+        rm -rf "$line" && \
         cd "$current_dir" # Return to the saved directory i.e "$OLDPWD"
         if [ $? -ne 0 ]; then
             echo "At least one command failed for: $source_repo/$line" >> "$current_dir/$failed_commands_file"
@@ -65,7 +65,7 @@ execute_artifact_migration() {
         jf rt dl "$source_repo/$line" . --threads=8 --server-id "$source_artifactory" && \
         jf rt u "$line" "$target_repo/$line" --threads=8 --server-id "$target_artifactory" && \
         #echo "In $(pwd). Now removing $line ----------------->" && \
-        rm -rf "$line" && \        
+        rm -rf "$line" && \
         cd "$current_dir" # Return to the saved directory i.e "$OLDPWD"
         if [ $? -ne 0 ]; then
             echo "At least one command failed for: $source_repo/$line" >> "$current_dir/$failed_commands_file"
