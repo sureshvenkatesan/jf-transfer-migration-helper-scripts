@@ -57,7 +57,15 @@ repos_with_space_difference = []
 repos_with_both_differences = []
 
 # Calculate space difference and sort by it in descending order
-repo_details_of_interest.sort(key=lambda repo: repo['source'].get('usedSpaceInBytes', 0) - repo['target'].get('usedSpaceInBytes', 0), reverse=True)
+# repo_details_of_interest.sort(key=lambda repo: repo['source'].get('usedSpaceInBytes', 0) - repo['target'].get('usedSpaceInBytes', 0), reverse=True)
+repo_details_of_interest.sort(
+    key=lambda repo: (
+        repo['source'].get('usedSpaceInBytes', 0) if repo.get('source') is not None else 0
+    ) - (
+        repo['target'].get('usedSpaceInBytes', 0) if repo.get('target') is not None else 0
+    ),
+    reverse=True
+)
 
 for repo_details in repo_details_of_interest:
     repo_key = repo_details['repoKey']
