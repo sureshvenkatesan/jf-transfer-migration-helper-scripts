@@ -139,10 +139,10 @@ with open(args.out, 'w') as output_file:
     for line in comparison_output_tabular:
         output_file.write(line + '\n')
 
-    output_file.write("\nRepos with Space Difference > 0 ({} repos):\n".format(len(repos_with_space_difference)))
+    output_file.write("\nRepos with 'usedSpaceInBytes' Difference > 0 ({} repos):\n".format(len(repos_with_space_difference)))
     output_file.write(';'.join(repos_with_space_difference))
 
-    output_file.write("\n\n\nRepos with Both Differences > 0 ({} repos):\n".format(len(repos_with_both_differences)))
+    output_file.write("\n\n\nRepos with Both 'usedSpaceInBytes' and filesCount Differences > 0 ({} repos):\n".format(len(repos_with_both_differences)))
     output_file.write("nohup sh -c 'export JFROG_CLI_LOG_LEVEL=DEBUG;JFROG_CLI_ERROR_HANDLING=panic;")
     output_file.write(f"jf rt transfer-files {args.source_server_id} {args.target_server_id} --include-repos \"")
     output_file.write(';'.join(repos_with_both_differences))
