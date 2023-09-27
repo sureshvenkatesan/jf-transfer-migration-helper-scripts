@@ -10,6 +10,8 @@ parser.add_argument('--source', required=True, help='Path to the source JSON fil
 parser.add_argument('--target', required=True, help='Path to the target JSON file')
 parser.add_argument('--repos', required=True, help='Path to the text file with repoKeys')
 parser.add_argument('--out', required=True, help='Path to the output comparison file')
+parser.add_argument('--source_server_id', required=True, help='server-id of source artifactory')
+parser.add_argument('--target_server_id', required=True, help='server-id of target artifactory')
 args = parser.parse_args()
 
 # Read source JSON file
@@ -103,6 +105,10 @@ for repo_details in repo_details_of_interest:
                                                                                                                 space_difference,
                                                                                                                 transfer_percentage))
 
+# sort the repo lists
+repos_with_space_difference.sort()
+repos_with_both_differences.sort()
+
 # Write comparison output to the specified output file
 with open(args.out, 'w') as output_file:
     output_file.write("Tabular Comparison:\n")
@@ -114,9 +120,15 @@ with open(args.out, 'w') as output_file:
 
     output_file.write("\n\n\nRepos with Both Differences > 0 ({} repos):\n".format(len(repos_with_both_differences)))
     output_file.write("nohup sh -c 'export JFROG_CLI_LOG_LEVEL=DEBUG;JFROG_CLI_ERROR_HANDLING=panic;")
-    output_file.write("jf rt transfer-files ncr ncratleostest --include-repos \"")
+    # output_file.write("jf rt transfer-files ncr ncratleostest --include-repos \"")
+    output_file.write(f"jf rt transfer-files {args.source_server_id} {args.target_server_id} --include-repos \"")
     output_file.write(';'.join(repos_with_both_differences))
     output_file.write("\"' &")
 
+    output_file.write("\n\n\nThe last 30 repos with Both Differences > 0:\n")
+    output_file.write("nohup sh -c 'export JFROG_CLI_LOG_LEVEL=DEBUG;JFROG_CLI_ERROR_HANDLING=panic;")
+    output_file.write(f"jf rt transfer-files {args.source_server_id} {args.target_server_id} --include-repos \"")
+    output_file.write(';'.join(repos_with_both_differences[-30:]))
+    output_file.write("\"' &")
 print(f"Comparison results written to {args.out}")
 
