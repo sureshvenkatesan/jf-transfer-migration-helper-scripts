@@ -12,6 +12,8 @@ parser.add_argument('--repos', required=True, help='Path to the text file with r
 parser.add_argument('--out', required=True, help='Path to the output comparison file')
 parser.add_argument('--source_server_id', required=True, help='server-id of source artifactory')
 parser.add_argument('--target_server_id', required=True, help='server-id of target artifactory')
+parser.add_argument('--total_repos_customer_will_migrate', type=int, default=30,  help='How many repos customer is responsible to migrate')
+parser.add_argument('--num_buckets_for_jfrog_ps_to_migrate', type=int, default=2, help='How many repo buckets Jfrog PS is responsible to migrate')
 args = parser.parse_args()
 
 # Read source JSON file
@@ -109,6 +111,28 @@ for repo_details in repo_details_of_interest:
 repos_with_space_difference.sort()
 repos_with_both_differences.sort()
 
+# Check if total_repos_customer_will_migrate is greater than the length of repos_with_both_differences
+if args.total_repos_customer_will_migrate > len(repos_with_both_differences):
+    print("Error: --total_repos_customer_will_migrate cannot be greater than the number of items in repos_with_both_differences.")
+    exit(1)
+    
+# Exclude the last n items based on the --total_repos_customer_will_migrate argument
+repos_to_bucket = repos_with_both_differences[:-args.total_repos_customer_will_migrate]
+
+# Ensure '--num_buckets_for_jfrog_ps_to_migrate' is not greater than the number of items
+num_buckets = min(args.num_buckets_for_jfrog_ps_to_migrate, len(repos_to_bucket))
+
+# Calculate the number of items per bucket
+repos_per_bucket = len(repos_to_bucket) // num_buckets
+
+# Create empty buckets
+buckets = [[] for _ in range(num_buckets)]
+
+# Loop through the repos and distribute them into buckets
+for i, repo in enumerate(repos_to_bucket, start=0):  # Start from 0
+    bucket_index = i % num_buckets  # Distribute items evenly among the buckets
+    buckets[bucket_index].append(repo)
+    
 # Write comparison output to the specified output file
 with open(args.out, 'w') as output_file:
     output_file.write("Tabular Comparison:\n")
@@ -120,15 +144,28 @@ with open(args.out, 'w') as output_file:
 
     output_file.write("\n\n\nRepos with Both Differences > 0 ({} repos):\n".format(len(repos_with_both_differences)))
     output_file.write("nohup sh -c 'export JFROG_CLI_LOG_LEVEL=DEBUG;JFROG_CLI_ERROR_HANDLING=panic;")
-    # output_file.write("jf rt transfer-files ncr ncratleostest --include-repos \"")
     output_file.write(f"jf rt transfer-files {args.source_server_id} {args.target_server_id} --include-repos \"")
     output_file.write(';'.join(repos_with_both_differences))
     output_file.write("\"' &")
 
-    output_file.write("\n\n\nThe last 30 repos with Both Differences > 0:\n")
+   # Repos that jfrog ps will run , based on the buckets
+    # Print the items in each bucket
+    output_file.write("\n\n\nJFrog PS to migrate below repos with Both Differences > 0:\n")
+    # Check if repos_to_bucket is empty
+    if not repos_to_bucket:
+        print("Warning: There are no repos  for JFrog PS to migrate.")
+    else:
+        for i, bucket in enumerate(buckets, start=0):  # Start from 0
+            output_file.write(f"\n\n{len(bucket)} repos : \n")  
+            output_file.write("nohup sh -c 'export JFROG_CLI_LOG_LEVEL=DEBUG;JFROG_CLI_ERROR_HANDLING=panic;")
+            output_file.write(f"jf rt transfer-files {args.source_server_id} {args.target_server_id} --include-repos \"")
+            output_file.write(';'.join(bucket))
+            output_file.write("\"' &")       
+   # Repos that customer takes ownership to run
+    output_file.write(f"\n\n\nCustomer responsible to migrate below {args.total_repos_customer_will_migrate} repos with Both Differences > 0:\n")
     output_file.write("nohup sh -c 'export JFROG_CLI_LOG_LEVEL=DEBUG;JFROG_CLI_ERROR_HANDLING=panic;")
     output_file.write(f"jf rt transfer-files {args.source_server_id} {args.target_server_id} --include-repos \"")
-    output_file.write(';'.join(repos_with_both_differences[-30:]))
+    output_file.write(';'.join(repos_with_both_differences[-args.total_repos_customer_will_migrate:]))
     output_file.write("\"' &")
 print(f"Comparison results written to {args.out}")
 
