@@ -8,12 +8,14 @@ import argparse
 parser = argparse.ArgumentParser(description='Compare repository details from source and target JSON files.')
 parser.add_argument('--source', required=True, help='Path to the source JSON file')
 parser.add_argument('--target', required=True, help='Path to the target JSON file')
-parser.add_argument('--repos', required=True, help='Path to the text file with repoKeys')
+parser.add_argument('--repos', required=True, help='Path to the text file with repoKeys which customer wants to migrate')
 parser.add_argument('--out', required=True, help='Path to the output comparison file')
 parser.add_argument('--source_server_id', required=True, help='server-id of source artifactory')
 parser.add_argument('--target_server_id', required=True, help='server-id of target artifactory')
 parser.add_argument('--total_repos_customer_will_migrate', type=int, default=30,  help='How many repos customer is responsible to migrate')
 parser.add_argument('--num_buckets_for_jfrog_ps_to_migrate', type=int, default=2, help='How many repo buckets Jfrog PS is responsible to migrate')
+parser.add_argument('--repo_threshold_in_gb', type=int, default=500, help='Threshold in GB for source repos to generate altrnate migrate commands')
+
 args = parser.parse_args()
 
 # Read source JSON file
@@ -30,6 +32,9 @@ with open(args.repos, 'r') as repo_file:
 
 # Extract repository details for each repoKey from source and target
 repo_details_of_interest = []
+
+
+
 for repo_key in repo_keys_of_interest:
     source_repo_details = next((repo for repo in source_data['repositoriesSummaryList'] if repo['repoKey'] == repo_key), None)
     target_repo_details = next((repo for repo in target_data['repositoriesSummaryList'] if repo['repoKey'] == repo_key), None)
@@ -71,6 +76,11 @@ repo_details_of_interest.sort(
     reverse=True
 )
 
+# Initialize a list to track big source repos
+big_source_repos = []
+# Define the threshold in bytes (1 GB = 1024 * 1024 * 1024 bytes)
+threshold_bytes = args.repo_threshold_in_gb * 1024 * 1024 * 1024
+
 for repo_details in repo_details_of_interest:
     repo_key = repo_details['repoKey']
     source_details = repo_details['source'] if repo_details['source'] else {}
@@ -89,6 +99,10 @@ for repo_details in repo_details_of_interest:
         if source_files_count - target_files_count > 0:
             repos_with_both_differences.append(repo_key)
 
+    # Check if source_space_in_bytes exceeds the threshold
+    if source_space_in_bytes > threshold_bytes:
+        big_source_repos.append(repo_key)
+        
     source_repo_type = source_details.get('repoType', 'N/A')
     target_repo_type = target_details.get('repoType', 'N/A')
 
@@ -110,6 +124,7 @@ for repo_details in repo_details_of_interest:
 # sort the repo lists
 repos_with_space_difference.sort()
 repos_with_both_differences.sort()
+big_source_repos.sort()
 
 # Check if total_repos_customer_will_migrate is greater than the length of repos_with_both_differences
 if args.total_repos_customer_will_migrate > len(repos_with_both_differences):
