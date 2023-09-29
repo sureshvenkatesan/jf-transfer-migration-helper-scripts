@@ -129,19 +129,20 @@ run_migrate_command() {
         echo $src_output > "${a}.tmp"
         echo "In run_migrate_command - 1 - b4 calling jq" 
         # cat "${a}.tmp"
-        cat "${a}.tmp" | jq '.results[] | select(has("path") and .path != null and has("name") and .name != null and has("sha256") and .sha256 != null) | (.path + "/" + .name + "," + (.sha256|tostring))' | sed 's/\.\///' | tr ' ' '\n' > "$a"
+        cat "${a}.tmp" | jq '.results[] | select(has("path") and .path != null and has("name") and .name != null and has("sha256") and .sha256 != null) | (.path + "/" + .name + "," + (.sha256|tostring))' | sed 's/\.\///'  > "$a"
         echo "In run_migrate_command - 2 - after calling jq" 
 
         echo "$target_output" > "${b}.tmp"
         echo "In run_migrate_command - 3 - b4 calling jq" 
         # cat "${b}.tmp"
-        cat "${b}.tmp" | jq '.results[] | select(has("path") and .path != null and has("name") and .name != null and has("sha256") and .sha256 != null) | (.path + "/" + .name + "," + (.sha256|tostring))' | sed  's/\.\///' | tr ' ' '\n' > "$b"
+        cat "${b}.tmp" | jq '.results[] | select(has("path") and .path != null and has("name") and .name != null and has("sha256") and .sha256 != null) | (.path + "/" + .name + "," + (.sha256|tostring))' | sed  's/\.\///'  > "$b"
         echo "In run_migrate_command - 4 - after calling jq" 
 
         #join -v1  <(sort "$a") <(sort "$b") | sed -re 's/,[[:alnum:]]+"$/"/g' | sed 's/"//g'| sed  '/\(index\.json\|\.timestamp\|conanmanifest\.txt\)$/d' > "$c"
         # join -v1  <(sort "$a") <(sort "$b") | sed -E -e 's/,[[:alnum:]]+"$/"/g' -e 's/"//g' -e '/(index\.json|\.timestamp|conanmanifest\.txt)$/d' > "$c"
         echo "In $(pwd) comparing - $a    to   $b"
-        join -v1  <(sort "$a") <(sort "$b") | sed -E -e 's/,[[:alnum:]]+"$/"/g' -e 's/"//g'  > "$c"
+        # join -v1  <(sort "$a") <(sort "$b") | sed -E -e 's/,[[:alnum:]]+"$/"/g' -e 's/"//g'  > "$c"
+        comm -23 <(sort "$a") <(sort "$b") | sed -E -e 's/,[[:alnum:]]+"$/"/g' -e 's/"//g'  > "$c"
         # Check if the file exists and is not empty
         if [ -s "$c" ]; then
             if [ "${TRANSFERONLY}" = "no" ]; then
@@ -540,5 +541,4 @@ migrateFolderRecursively "$root_folder"
 
 
 echo "All transfers for $source_repo completed" >> "$successful_commands_file"
-
 

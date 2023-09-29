@@ -104,10 +104,11 @@ def generate_comparison_output(repo_details_of_interest, args):
             repos_with_space_difference.append(repo_key)
             if source_files_count - target_files_count > 0:
                 repos_with_both_differences.append(repo_key)
+                # Check if source_space_in_bytes exceeds the threshold
+                if source_space_in_bytes > threshold_bytes:
+                    big_source_repos.append(repo_key)
 
-        # Check if source_space_in_bytes exceeds the threshold
-        if source_space_in_bytes > threshold_bytes:
-            big_source_repos.append(repo_key)
+
             
         source_repo_type = source_details.get('repoType', 'N/A')
         target_repo_type = target_details.get('repoType', 'N/A')
@@ -138,8 +139,8 @@ def print_alternative_transfer_method(output_file,big_source_repos, source_serve
     if not big_source_repos:
         output_file.write("\n\n\nNo big source repositories to transfer.\n")
         return
-
-    output_file.write("\n\n\nAlternative Transfer Method for Big Source Repositories:\n\n")
+    
+    output_file.write("\n\n\nAlternative Transfer Method for ({}) Big Source Repositories:\n\n".format(len(big_source_repos)))
     # for repo in big_source_repos:
     #     output_file.write(f"\nTransfer {repo} from {source_server_id} to {target_server_id}")
     screen_commands = generate_screen_commands(big_source_repos, source_server_id, target_server_id)
@@ -162,6 +163,10 @@ def bucket_repositories(repos_to_bucket, args):
     # Calculate the number of buckets
     num_buckets = min(args.num_buckets_for_jfrog_ps_to_migrate, len(repos_to_bucket))
 
+    if num_buckets == 0:
+        # Handle the case where num_buckets is 0
+        return [[]]  # Create at least one bucket with an empty list
+    
     repos_per_bucket = len(repos_to_bucket) // num_buckets
     buckets = [[] for _ in range(num_buckets)]
 
@@ -187,31 +192,59 @@ def write_output(output_file, comparison_output_tabular, repos_with_space_differ
     output_file.write("\nRepos with 'usedSpaceInBytes' Difference > 0 ({} repos):\n".format(len(repos_with_space_difference)))
     output_file.write(';'.join(repos_with_space_difference))
 
-    output_file.write("\n\n\nRepos with Both 'usedSpaceInBytes' and filesCount Differences > 0 ({} repos):\n".format(len(repos_with_both_differences)))
-    output_file.write("nohup sh -c 'export JFROG_CLI_LOG_LEVEL=DEBUG;JFROG_CLI_ERROR_HANDLING=panic;")
-    output_file.write(f"jf rt transfer-files {args.source_server_id} {args.target_server_id} --include-repos \"")
-    output_file.write(';'.join(repos_with_both_differences))
-    output_file.write("\"' &")
 
+    # Print the commands for the big repos
     if args.print_alternative_transfer:
         print_alternative_transfer_method(output_file, big_source_repos, args.source_server_id, args.target_server_id)
-
-    output_file.write("\n\n\nJFrog PS to migrate below repos with Both Differences > 0:\n")
+        
+    # Now print the commands for the small / all repos if ot using alternate commands to transfer
     if not buckets:
-        print("Warning: There are no repos for JFrog PS to migrate.")
-    else:
-        for i, bucket in enumerate(buckets, start=0):
-            output_file.write(f"\n\n{len(bucket)} repos : \n")
+        print("Warning: There are no small repos for JFrog PS to migrate.")
+        output_file.write(f"\n\nWarning: There are no small repos for JFrog PS to migrate.")
+    else:        
+        output_file.write("\n\n\n({}) small Repos with Both 'usedSpaceInBytes' and 'filesCount Differences' > 0 :\n".format(len(repos_with_both_differences)))
+
+        output_file.write("nohup sh -c 'export JFROG_CLI_LOG_LEVEL=DEBUG;JFROG_CLI_ERROR_HANDLING=panic;")
+        output_file.write(f"jf rt transfer-files {args.source_server_id} {args.target_server_id} --include-repos \"")
+        output_file.write(';'.join(repos_with_both_differences))
+        output_file.write("\"' &")
+        
+        total_repos_PS_will_migrate = len(repos_with_both_differences) - args.total_repos_customer_will_migrate
+        if ((args.total_repos_customer_will_migrate > 0) and ( total_repos_PS_will_migrate > 0 ) ):
+            # There are more repos  we can ask customer to migrate. 
+            # The remaininng PS can migrate
+            output_file.write(f"\n\n\nJFrog PS to migrate below { total_repos_PS_will_migrate } repos with Both 'usedSpaceInBytes' and 'filesCount Differences' > 0:\n")
+            print("==================================================================")
+            print(f"{total_repos_PS_will_migrate} repos PS will migrate is ->  {repos_with_both_differences[:total_repos_PS_will_migrate]}")
+            print("==================================================================")
+            for i, bucket in enumerate(buckets, start=0):
+                output_file.write(f"\n\n{len(bucket)} repos : \n")
+                output_file.write("nohup sh -c 'export JFROG_CLI_LOG_LEVEL=DEBUG;JFROG_CLI_ERROR_HANDLING=panic;")
+                output_file.write(f"jf rt transfer-files {args.source_server_id} {args.target_server_id} --include-repos \"")
+                output_file.write(';'.join(bucket))
+                output_file.write("\"' &")
+                
+            print("\n\n==================================================================")
+            print(f"{len(repos_with_both_differences[-args.total_repos_customer_will_migrate:])} total_repos_customer_will_migrate is ->  {repos_with_both_differences[-args.total_repos_customer_will_migrate:]}")
+            print("\n==================================================================")
+            output_file.write(f"\n\n\nCustomer responsible to migrate below {args.total_repos_customer_will_migrate} repos with Both Differences > 0:\n")
             output_file.write("nohup sh -c 'export JFROG_CLI_LOG_LEVEL=DEBUG;JFROG_CLI_ERROR_HANDLING=panic;")
             output_file.write(f"jf rt transfer-files {args.source_server_id} {args.target_server_id} --include-repos \"")
-            output_file.write(';'.join(bucket))
+            output_file.write(';'.join(repos_with_both_differences[-args.total_repos_customer_will_migrate:]))
             output_file.write("\"' &")
+        else:
+            # There are not enough repos to give to customer. PS can do it all
+            output_file.write(f"\n\n\nNot enough repos to give to customer. JFrog PS can migrate all {len(repos_with_both_differences)} repos with Both 'usedSpaceInBytes' and 'filesCount Differences' > 0:\n")
+            print("==================================================================")
+            print(f"{len(repos_with_both_differences)} repos PS will migrate is ->  {repos_with_both_differences}")
+            print("==================================================================")
+            for i, bucket in enumerate(buckets, start=0):
+                output_file.write(f"\n\n{len(bucket)} repos : \n")
+                output_file.write("nohup sh -c 'export JFROG_CLI_LOG_LEVEL=DEBUG;JFROG_CLI_ERROR_HANDLING=panic;")
+                output_file.write(f"jf rt transfer-files {args.source_server_id} {args.target_server_id} --include-repos \"")
+                output_file.write(';'.join(bucket))
+                output_file.write("\"' &")
 
-    output_file.write(f"\n\n\nCustomer responsible to migrate below {args.total_repos_customer_will_migrate} repos with Both Differences > 0:\n")
-    output_file.write("nohup sh -c 'export JFROG_CLI_LOG_LEVEL=DEBUG;JFROG_CLI_ERROR_HANDLING=panic;")
-    output_file.write(f"jf rt transfer-files {args.source_server_id} {args.target_server_id} --include-repos \"")
-    output_file.write(';'.join(repos_with_both_differences[-args.total_repos_customer_will_migrate:]))
-    output_file.write("\"' &")
 
 def subtract_lists(list1, list2):
     return [item for item in list1 if item not in list2]
@@ -223,16 +256,17 @@ def generate_screen_commands(big_source_repos, source_server_id, target_server_i
     num_subfolders = len(big_source_repos)
 
     # Create subfolders if they don't exist
-    for i in range(1, num_subfolders + 1):
-        subfolder = os.path.join("output", str(i))
-        os.makedirs(subfolder, exist_ok=True)
+    # for i in range(1, num_subfolders + 1):
+    #     subfolder = os.path.join("output", str(i))
+    #     os.makedirs(subfolder, exist_ok=True)
 
     for i, repo in enumerate(big_source_repos, start=1):
         subfolder = os.path.join("output", str(i))
         screen_session_name = f"upload-session{i}"
         screen_command = (
+            f"mkdir -p {subfolder}\n"
             f"cd {subfolder}\n"
-            f"screen -dmS {screen_session_name} bash -c './sv_test_migrate_n_subfolders_in_parallel.sh "
+            f"screen -dmS {screen_session_name} bash -c '../../sv_test_migrate_n_subfolders_in_parallel.sh "
             f"{source_server_id} {repo} {target_server_id} {repo} yes \".conan\" 2>&1 | tee {screen_session_name}.log; exec bash'"
             f"\ncd ../..\n"
         )
@@ -249,16 +283,32 @@ def main():
 
     repo_details_of_interest = extract_repo_details(repo_keys, source_data, target_data)
     comparison_output_tabular, repos_with_space_difference, repos_with_both_differences , big_source_repos = generate_comparison_output(repo_details_of_interest, args)
-
+    print("\n\n==================================================================")
+    print(f"{len(repos_with_space_difference)} repos_with_space_difference is ->  {repos_with_space_difference}")
+    print("==================================================================")
+    print(f"{len(repos_with_both_differences)} repos_with_both_differences is ->  {repos_with_both_differences}")
+    print("==================================================================")
+    print(f"{len(big_source_repos)} big_source_repos is ->  {big_source_repos}")
+    print("==================================================================\n\n")
     # ... (rest of the code for bucketing and writing output)
     if args.print_alternative_transfer:
 
         # Subtract big_source_repos from repos_with_both_differences to get small_repos_with_both_differences
         small_repos_with_both_differences = subtract_lists(repos_with_both_differences, big_source_repos)
-        small_repos_with_both_differences.sort()
+        # Check if small_repos_with_both_differences is not empty before sorting
+        if small_repos_with_both_differences:
+            small_repos_with_both_differences.sort()
+        print(f"{len(small_repos_with_both_differences)} small_repos_with_both_differences is ->  {small_repos_with_both_differences}")
+        print("==================================================================\n\n")
         
-        # Exclude the last n repos based on the --total_repos_customer_will_migrate argument
-        repos_to_bucket = small_repos_with_both_differences[:-args.total_repos_customer_will_migrate]
+        # Exclude the last n repos based on the --total_repos_customer_will_migrate argument , if there are more repos
+        if len(small_repos_with_both_differences) - args.total_repos_customer_will_migrate > 0:
+            # If there are more repos  then we can give the last  total_repos_customer_will_migrate to customer to migrate. 
+            # The remaininng PS can migrate
+            repos_to_bucket = small_repos_with_both_differences[:len(small_repos_with_both_differences) - args.total_repos_customer_will_migrate]
+        else:
+            # If there are not enough repos, assign then PS can migrate all the repos_with_both_differences repos.
+            repos_to_bucket = small_repos_with_both_differences
 
         # Bucket the repositories
         buckets = bucket_repositories(repos_to_bucket, args)
@@ -268,8 +318,15 @@ def main():
             write_output(output_file, comparison_output_tabular, repos_with_space_difference, small_repos_with_both_differences, big_source_repos, args, buckets)
 
     else:
-        # Exclude the last n repos based on the --total_repos_customer_will_migrate argument
-        repos_to_bucket = repos_with_both_differences[:-args.total_repos_customer_will_migrate]
+        # Exclude the last n repos based on the --total_repos_customer_will_migrate argument , if there are more repos
+        if len(repos_with_both_differences) - args.total_repos_customer_will_migrate > 0:
+            # If there are more repos  then we can give the last  total_repos_customer_will_migrate to customer to migrate. 
+            # The remaininng PS can migrate
+            repos_to_bucket = repos_with_both_differences[:len(repos_with_both_differences) - args.total_repos_customer_will_migrate]
+        else:
+            # If there are not enough repos, assign then PS can migrate all the repos_with_both_differences repos.
+            repos_to_bucket = repos_with_both_differences
+
 
         # Bucket the repositories
         buckets = bucket_repositories(repos_to_bucket, args)
