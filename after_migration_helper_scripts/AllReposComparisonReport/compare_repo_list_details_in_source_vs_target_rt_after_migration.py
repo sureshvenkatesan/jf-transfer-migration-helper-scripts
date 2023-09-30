@@ -202,13 +202,23 @@ def write_output(output_file, comparison_output_tabular, repos_with_space_differ
         print("Warning: There are no small repos for JFrog PS to migrate.")
         output_file.write(f"\n\nWarning: There are no small repos for JFrog PS to migrate.")
     else:        
-        output_file.write("\n\n\n({}) small Repos with Both 'usedSpaceInBytes' and 'filesCount Differences' > 0 :\n".format(len(repos_with_both_differences)))
-
+        output_file.write("\n\n\n({}) Repos with Both 'usedSpaceInBytes' and 'filesCount Differences' > 0 :\n".format(len(repos_with_both_differences)))
         output_file.write("nohup sh -c 'export JFROG_CLI_LOG_LEVEL=DEBUG;JFROG_CLI_ERROR_HANDLING=panic;")
         output_file.write(f"jf rt transfer-files {args.source_server_id} {args.target_server_id} --include-repos \"")
         output_file.write(';'.join(repos_with_both_differences))
         output_file.write("\"' &")
-        
+
+        print("==================================================================")
+        repos_with_space_diff_but_same_file_count = subtract_lists(repos_with_space_difference, repos_with_both_differences)
+        repos_with_space_diff_but_same_file_count.sort()
+        print(f"{len(repos_with_space_diff_but_same_file_count)} repos_with_space_diff_but_same_file_count is ->  {repos_with_space_diff_but_same_file_count}")
+        print("==================================================================")
+        output_file.write("\n\n\n({}) Repos with same 'filesCount' but 'usedSpaceInBytes' > 0 :\n".format(len(repos_with_space_diff_but_same_file_count)))
+        output_file.write("nohup sh -c 'export JFROG_CLI_LOG_LEVEL=DEBUG;JFROG_CLI_ERROR_HANDLING=panic;")
+        output_file.write(f"jf rt transfer-files {args.source_server_id} {args.target_server_id} --include-repos \"")
+        output_file.write(';'.join(repos_with_space_diff_but_same_file_count))
+        output_file.write("\"' &")
+                
         total_repos_PS_will_migrate = len(repos_with_both_differences) - args.total_repos_customer_will_migrate
         if ((args.total_repos_customer_will_migrate > 0) and ( total_repos_PS_will_migrate > 0 ) ):
             # There are more repos  we can ask customer to migrate. 

@@ -1,9 +1,20 @@
+# DISCLAIMER:
+# Your use of this code is governed by the following license:JFrog hereby grants you a non-
+# exclusive, non-transferable, non-distributable right to use this code solely in connection with
+# your use of a JFrog product or service. This code is provided 'as-is' and without any warranties or
+# conditions, either express or implied including, without limitation, any warranties or conditions
+# of title, non-infringement, merchantability or fitness for a particular cause. Nothing herein shall
+# convey to you any right or title in the code, other than for the limited use right set forth
+# herein. For the purposes hereof "you" shall mean you as an individual as well as the organization
+# on behalf of which you are using the software and the JFrog product or service.
+
+
 #!/bin/bash
 
 # ./sv_test_migrate_n_subfolders_in_parallel.sh usvartifactory5 liquid jfrogio liquid  no  
-# Check if at least the first four required parameters are provided
-if [ $# -lt 4 ]; then
-    echo "Usage: $0 <source-artifactory> <source-repo> <target-repo> <target-artifactory> <transfer yes/no> [semicolon separted exclude_folders] [root-folder]"
+# Check if at least the first 5 required parameters are provided
+if [ $# -lt 5 ]; then
+    echo "Usage: $0 <source-artifactory> <source-repo> <target-repo> <target-artifactory> <transfer yes/no> [root-folder] [semicolon separted exclude_folders]"
     exit 1
 fi
 
@@ -17,7 +28,7 @@ source_repo="$2"
 target_artifactory="$3"
 target_repo="$4"
 TRANSFERONLY="$5"
-EXCLUDE_FOLDERS=";.conan;$6;"
+EXCLUDE_FOLDERS=";.conan;$7;"
 # jq_sed_command="jq '.results[]|(.path +\"/\"+ .name+\",\"+(.sha256|tostring))'  | sed  's/\.\///'"
 
 # Counter to limit parallel execution
@@ -387,8 +398,8 @@ processLeafFolderContents() {
 
 
 # Check if the fifth parameter (root-folder) is provided
-if [ $# -ge 7 ]; then
-    root_folder="$7"
+if [ $# -ge 6 ]; then
+    root_folder="$6"
 else 
     root_folder="."
 fi
