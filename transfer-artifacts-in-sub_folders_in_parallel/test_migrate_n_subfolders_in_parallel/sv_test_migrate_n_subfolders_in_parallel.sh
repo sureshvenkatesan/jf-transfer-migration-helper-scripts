@@ -14,7 +14,7 @@
 # ./sv_test_migrate_n_subfolders_in_parallel.sh usvartifactory5 liquid jfrogio liquid  no  
 # Check if at least the first 5 required parameters are provided
 if [ $# -lt 5 ]; then
-    echo "Usage: $0 <source-artifactory> <source-repo> <target-repo> <target-artifactory> <transfer yes/no> [root-folder] [semicolon separted exclude_folders]"
+    echo "Usage: $0 <source-artifactory> <source-repo> <target-artifactory> <target-repo> <transfer yes/no> [root-folder] [migrateFolderRecursively yes/no] [semicolon separted exclude_folders]"
     exit 1
 fi
 
@@ -28,7 +28,19 @@ source_repo="$2"
 target_artifactory="$3"
 target_repo="$4"
 TRANSFERONLY="$5"
-EXCLUDE_FOLDERS=";.conan;$7;"
+migratefiles_and_subfolders_recursive="yes"
+
+# Check if the 7th argument is provided and not empty
+if [ $# -ge 7 ] && [ -n "${7}" ]; then
+    # Check if the 7th argument is either "yes" or "no"
+    if [ "${7}" = "yes" ] || [ "${7}" = "no" ]; then
+        migratefiles_and_subfolders_recursive="${7}"
+    else
+        echo "Error: The 7th argument must be 'yes' or 'no'. Using default value 'yes'."
+    fi
+fi
+
+EXCLUDE_FOLDERS=";.conan;$8;"
 # jq_sed_command="jq '.results[]|(.path +\"/\"+ .name+\",\"+(.sha256|tostring))'  | sed  's/\.\///'"
 
 # Counter to limit parallel execution
@@ -418,9 +430,12 @@ target_command1="jf rt curl -s -XPOST -H 'Content-Type: text/plain' api/search/a
 #Call the migrate command without the trailing * to migrate files in the $root_folder 
 run_migrate_command "$src_command1" "$target_command1" "$root_folder" "0" "0" "top"
 
-# Process sub-folders
-migrateFolderRecursively "$root_folder"
 
+
+if [ "$migratefiles_and_subfolders_recursive" = "yes" ]; then
+    # Process sub-folders
+    migrateFolderRecursively "$root_folder"
+fi
 
 echo "All transfers for $source_repo completed" >> "$successful_commands_file"
 

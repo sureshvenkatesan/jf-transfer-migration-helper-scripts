@@ -223,7 +223,7 @@ def write_output(output_file, comparison_output_tabular, repos_with_space_differ
         if ((args.total_repos_customer_will_migrate > 0) and ( total_repos_PS_will_migrate > 0 ) ):
             # There are more repos  we can ask customer to migrate. 
             # The remaininng PS can migrate
-            output_file.write(f"\n\n\nJFrog PS to migrate below { total_repos_PS_will_migrate } repos with Both 'usedSpaceInBytes' and 'filesCount Differences' > 0:\n")
+            output_file.write(f"\n\n\nMigrate below { total_repos_PS_will_migrate } repos with Both 'usedSpaceInBytes' and 'filesCount Differences' > 0:\n")
             print("==================================================================")
             print(f"{total_repos_PS_will_migrate} repos PS will migrate is ->  {repos_with_both_differences[:total_repos_PS_will_migrate]}")
             print("==================================================================")
@@ -244,7 +244,7 @@ def write_output(output_file, comparison_output_tabular, repos_with_space_differ
             output_file.write("\"' &")
         else:
             # There are not enough repos to give to customer. PS can do it all
-            output_file.write(f"\n\n\nNot enough repos to give to customer. JFrog PS can migrate all {len(repos_with_both_differences)} repos with Both 'usedSpaceInBytes' and 'filesCount Differences' > 0:\n")
+            output_file.write(f"\n\n\nNot enough repos to give to customer. Migrate all {len(repos_with_both_differences)} repos with Both 'usedSpaceInBytes' and 'filesCount Differences' > 0:\n")
             print("==================================================================")
             print(f"{len(repos_with_both_differences)} repos PS will migrate is ->  {repos_with_both_differences}")
             print("==================================================================")
