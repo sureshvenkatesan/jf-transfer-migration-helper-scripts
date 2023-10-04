@@ -2,6 +2,7 @@ After migration is complete for hige mono repos you can setup replication .
 
 For example for the merlin and liquid repos:
 Replication configuration:
+```
 a)
 0 15 10 ? * *
 https://bose.jfrog.io/artifactory/liquid/
@@ -10,6 +11,7 @@ _/*
 
 b) 0 15 12 ? * *
 https://bose.jfrog.io/artifactory/merlin/
+```
 
 ---
 Then check the replication status in the source JPD . But this requires Mission Control:
