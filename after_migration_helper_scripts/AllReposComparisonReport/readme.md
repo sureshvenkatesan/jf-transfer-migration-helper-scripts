@@ -44,10 +44,26 @@ If you want to exclude some repos (listed in exclude_these_cust-resposibility_re
 comm -23 <(sort all_local_repos_in_ncr.txt) <(sort exclude_these_cust-resposibility_repos.txt) > ps_currently_migrating_for_group2.txt
 ```
 
-## Usage:
+## Usage
+Assume the list of repos we want to compare is  [group2_found_in_all_local_repos_in_ncr.txt](AllReposComparisonReport/input/group2_found_in_all_local_repos_in_ncr.txt)
 
+Generate the comparison report using:
+```
+python AllReposComparisonReport/compare_repo_list_details_in_source_vs_target_rt_after_migration.py \
+ --source AllReposComparisonReport/input/ncr_storageinfo.json \
+ --target AllReposComparisonReport/input/ncratleostest_storageinfo.json \
+ --repos AllReposComparisonReport/input/group2_found_in_all_local_repos_in_ncr.txt \
+ --out AllReposComparisonReport/output/comparison.txt \
+ --source_server_id ncr \
+ --target_server_id ncratleostest \
+ --total_repos_customer_will_migrate 0 \
+ --num_buckets_for_jfrog_ps_to_migrate 3
+```
+This will generate the report in [comparison.txt](AllReposComparisonReport/output/comparison.txt)
 
 ## Command-line arguments:
+```
+
 --source: Path to the source JSON file containing repository details.
 --target: Path to the target JSON file containing repository details.
 --repos: Path to the text file containing repoKeys that the customer wants to migrate.
@@ -59,5 +75,5 @@ comm -23 <(sort all_local_repos_in_ncr.txt) <(sort exclude_these_cust-resposibil
                                                   the comparison report can bucket the repos and genetrate the "jf rt transfer-files" command.
 --repo_threshold_in_gb (optional): Threshold in gigabytes (GB) for source repositories to generate alternate migrate commands.
 --print_alternative_transfer (optional): Include this flag to print alternative transfer methods for large source repositories.
-
+```
 
