@@ -36,36 +36,7 @@ def generate_screen_commands(source_jpd, source_repo, target_jpd, target_repo, f
 
     return screen_commands
 
-# Function to generate the Bash script
-# def generate_bash_script(screen_commands, max_jobs):
-#     script = f"""#!/bin/bash
 
-# # Execute screen commands with a maximum of {max_jobs} jobs at a time
-# max_jobs={max_jobs}
-
-# # Execute screen commands as background jobs
-# i=0
-# for screen_command in "{'" "'.join(screen_commands)}"; do
-#     # Start the screen command in the background
-#     eval "$screen_command" &
-    
-#     # Increment the job counter
-#     ((i++))
-    
-#     # If the maximum number of jobs is reached, wait for any job to finish
-#     if ((i >= max_jobs)); then
-#         wait -n  # Wait for any job to finish
-#         ((i--))  # Decrement the job counter
-#     fi
-# done
-
-# # Wait for all remaining jobs to complete
-# wait
-
-# # Additional cleanup or post-processing commands can go here
-# """
-
-#     return script
 
 
 def generate_bash_script(screen_commands, max_jobs, source_repo):
@@ -110,21 +81,7 @@ wait
 
     return script
 
-# def modify_output_filename(args):
-#     # Check if the provided --out value is a fully qualified file path
-#     if '/' in args.out or '\\' in args.out:  # Check for '/' (Unix) or '\\' (Windows) path separator
-#         # Extract the directory and filename parts
-#         directory, filename = args.out.rsplit('/', 1)
-#         # Add a prefix to the filename
-#         filename = f'{args.source_repo}_sceen-cmds_{filename}'
-#         # Combine the directory and modified filename
-#         modified_out = directory + '/' + filename
-#     else:
-#         # No directory specified, just add the prefix to the provided filename
-#         modified_out = f'{args.source_repo}_sceen-cmds_{args.out}'
-#     # Print the modified output filename
-#     print('Modified --out:', modified_out)
-#     return modified_out
+
 
 def modify_output_filename(args):
     # Check if the provided --out value is a fully qualified directory path
@@ -171,8 +128,10 @@ if __name__ == "__main__":
         
         # Print the screen commands
         screen_commands = generate_screen_commands(args.source_jpd, args.source_repo, args.target_jpd, args.target_repo, folder_list)  # Replace "target_server_id" with your target server ID
+        
         # for command in screen_commands:
         #     print(command)
+        
         # Generate the Bash script
         max_jobs = 10  # Adjust the maximum number of concurrent jobs as needed
         bash_script = generate_bash_script(screen_commands, max_jobs, args.source_repo)
