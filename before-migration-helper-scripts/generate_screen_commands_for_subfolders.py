@@ -28,8 +28,8 @@ def generate_screen_commands(source_jpd, source_repo, target_jpd, target_repo, f
             f"pushd {subfolder}; "
             f"screen -dmS {screen_session_name} bash -c "
             f"'/app/sureshv/sv_test_migrate_n_subfolders_in_parallel.sh "
-            # f"{source_jpd} {source_repo} {target_jpd} {target_repo} yes {root_folder} yes \".conan\" 2>&1 | tee {screen_session_name}.log; exit'"
-            f"usvartifactory5 {source_repo} jfrogio {target_repo} yes {root_folder} yes \\\".conan\\\" 2>&1 | tee {screen_session_name}.log; exit' ; "
+            f"{source_jpd} {source_repo} {target_jpd} {target_repo} yes {root_folder} yes \\\".conan\\\" 2>&1 | tee {screen_session_name}.log; exit' ; "
+            # f"usvartifactory5 {source_repo} jfrogio {target_repo} yes {root_folder} yes \\\".conan\\\" 2>&1 | tee {screen_session_name}.log; exit' ; "
             f"popd"
         )
         screen_commands.append(screen_command)
@@ -110,8 +110,38 @@ wait
 
     return script
 
+# def modify_output_filename(args):
+#     # Check if the provided --out value is a fully qualified file path
+#     if '/' in args.out or '\\' in args.out:  # Check for '/' (Unix) or '\\' (Windows) path separator
+#         # Extract the directory and filename parts
+#         directory, filename = args.out.rsplit('/', 1)
+#         # Add a prefix to the filename
+#         filename = f'{args.source_repo}_sceen-cmds_{filename}'
+#         # Combine the directory and modified filename
+#         modified_out = directory + '/' + filename
+#     else:
+#         # No directory specified, just add the prefix to the provided filename
+#         modified_out = f'{args.source_repo}_sceen-cmds_{args.out}'
+#     # Print the modified output filename
+#     print('Modified --out:', modified_out)
+#     return modified_out
 
+def modify_output_filename(args):
+    # Check if the provided --out value is a fully qualified directory path
+    if '/' in args.outdir or '\\' in args.outdir:  # Check for '/' (Unix) or '\\' (Windows) path separator
+        # Use the provided directory path
+        directory = args.outdir
+    elif args.outdir == '.':
+        # Use the current directory
+        directory = ''
+    else:
+        # Assume it's a filename in the current directory
+        directory = ''
 
+    # Create a modified filename with a prefix
+    filename = f'{args.source_repo}_generated_screen_cmds.sh'
+    return os.path.join(directory, filename)
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate screen commands for Artifactory subfolder migration")
     parser.add_argument("--source_jpd", required=True, help="Source server ID")
@@ -119,9 +149,10 @@ if __name__ == "__main__":
     parser.add_argument("--target_jpd", required=True, help="Source server ID")
     parser.add_argument("--target_repo", required=True, help="Source repository")
     parser.add_argument("--subfolder", required=True, help="Subfolder to concatenate to URIs")
+    parser.add_argument('--outdir', default=".", help='Output Directory for the geneated screen commands bash script')
    
     args = parser.parse_args()
-
+    
     # Construct and execute the jf rt curl command
     command = [
         "jf", "rt", "curl",
@@ -147,9 +178,9 @@ if __name__ == "__main__":
         bash_script = generate_bash_script(screen_commands, max_jobs, args.source_repo)
 
         # Save the Bash script to a file
-        with open("generated_script.sh", "w") as script_file:
+        with open(modify_output_filename(args), "w") as script_file:
             script_file.write(bash_script)
 
-        print("Generated Bash script: generated_script.sh")
+        print(f"Generated Bash script: {modify_output_filename(args)}")
     except subprocess.CalledProcessError as e:
         print("Command failed with error:", e.stderr)

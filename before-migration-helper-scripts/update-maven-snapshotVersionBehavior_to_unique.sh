@@ -12,24 +12,27 @@
 
 ### Exit the script on any failures
 ## define variable
+# Define the server ID as a variable
+server_id="${1:?Enter  artifactory server ID}"
+
+
 cd maven-repos
-jf c use ncratleos
 
 
 cat non-unique-maven-snapshotVersionBehavior.list |  while read line
 do
     REPO=$(echo $line | cut -d ':' -f 2)
-    echo "Getting configuration for "$REPO
-    jf rt curl api/repositories/$REPO >> $REPO-config.json
+    echo "Getting configuration for $REPO"
+    jf rt curl api/repositories/$REPO --server-id=$server_id >> $REPO-config.json
 
     cp $REPO-config.json $REPO-config-before-change.json
 
     tempfile=$(mktemp -u)
     jq --arg sub "unique" '.snapshotVersionBehavior|= $sub' "$REPO-config.json" > "$tempfile"
     mv "$tempfile" "$REPO-config.json"
-    mv $REPO-config-before-change.json backup-ncratleos
+    mv $REPO-config-before-change.json backup-$server_id
 
-    data=$( jf rt curl  -X POST api/repositories/$REPO -H "Content-Type: application/json" -T $REPO-config.json --server-id=ncratleos -s | grep message | xargs)
+    data=$( jf rt curl  -X POST api/repositories/$REPO -H "Content-Type: application/json" -T $REPO-config.json --server-id=$server_id -s | grep message | xargs)
     echo $data
     if [[ $data == *"message"*  ]];then
         echo "$REPO" >> conflicting-repos.txt
