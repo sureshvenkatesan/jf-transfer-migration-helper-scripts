@@ -1,4 +1,4 @@
-After migration is complete for hige mono repos you can setup replication .
+After migration is complete for huge mono repos you can setup replication .
 
 For example for the merlin and liquid repos:
 Replication configuration:

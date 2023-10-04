@@ -2,12 +2,25 @@
 grep -i error /root/nohup.out
 ```
 
+Output:
+```
 nohup.out:15:04:01 [Debug] Handling errors file: ' /root/.jfrog/transfer/repositories/b6accca51b29c632aceee8a64600a3c248ad2ea0/errors/retryable/authentic-maven-snapshots-restored-2-1693435664681-0.json '
 nohup.out:15:04:01 [Debug] Done handling errors file: ' /root/.jfrog/transfer/repositories/b6accca51b29c632aceee8a64600a3c248ad2ea0/errors/retryable/authentic-maven-snapshots-restored-2-1693435664681-0.json '. Deleting it...
 nohup.out:15:04:21 [Debug] Saving split content JSON file to: /root/.jfrog/transfer/repositories/b6accca51b29c632aceee8a64600a3c248ad2ea0/delays/authentic-maven-snapshots-restored-1693494241513-0.json.
 nohup.out:15:04:21 [Debug] Handling delayed artifacts file: '/root/.jfrog/transfer/repositories/b6accca51b29c632aceee8a64600a3c248ad2ea0/delays/authentic-maven-snapshots-restored-1693494241513-0.json'
 nohup.out:15:04:21 [Debug] Done handling delayed artifacts file: '/root/.jfrog/transfer/repositories/b6accca51b29c632aceee8a64600a3c248ad2ea0/delays/authentic-maven-snapshots-restored-1693494241513-0.json'. Deleting it...
 nohup.out:22:08:17 [Debug] write ConnectException: Connection refused to file /root/.jfrog/transfer/repositories/b6accca51b29c632aceee8a64600a3c248ad2ea0/errors/retryable/authentic-maven-snapshots-restored-0-1693432753461-0.json
+```
+
+
+```
+grep "Handling folder\|transferring folder"  nohup.out
+```
+Output:
+```
+04:32:44 [Debug] [Thread 19] Handling folder: ndce-snapshots/com/ncr/ndce/terminal/ndce-sst-runtime-for-andc50x/2.2.1-M02-SNAPSHOT
+04:32:44 [Debug] [Thread 13] Done transferring folder: ndce-snapshots/com/ncr/ndce/terminal/ndce-agent-installer/1.1.1-SNAPSHOT
+```
 
 
 cd ~/.jfrog/transfer/repositories 
