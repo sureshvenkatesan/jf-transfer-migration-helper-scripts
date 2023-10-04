@@ -45,7 +45,7 @@ comm -23 <(sort all_local_repos_in_ncr.txt) <(sort exclude_these_cust-resposibil
 ```
 
 ## Usage
-Assume the list of repos we want to compare is  [group2_found_in_all_local_repos_in_ncr.txt](AllReposComparisonReport/input/group2_found_in_all_local_repos_in_ncr.txt)
+Assume the list of repos we want to compare is  [group2_found_in_all_local_repos_in_ncr.txt](input/group2_found_in_all_local_repos_in_ncr.txt)
 
 Generate the comparison report using:
 ```
@@ -59,7 +59,7 @@ python AllReposComparisonReport/compare_repo_list_details_in_source_vs_target_rt
  --total_repos_customer_will_migrate 0 \
  --num_buckets_for_jfrog_ps_to_migrate 3
 ```
-This will generate the report in [comparison.txt](AllReposComparisonReport/output/comparison.txt)
+This will generate the report in [comparison.txt](output/comparison.txt)
 
 ## Command-line arguments:
 ```
@@ -76,4 +76,3 @@ This will generate the report in [comparison.txt](AllReposComparisonReport/outpu
 --repo_threshold_in_gb (optional): Threshold in gigabytes (GB) for source repositories to generate alternate migrate commands.
 --print_alternative_transfer (optional): Include this flag to print alternative transfer methods for large source repositories.
 ```
-
