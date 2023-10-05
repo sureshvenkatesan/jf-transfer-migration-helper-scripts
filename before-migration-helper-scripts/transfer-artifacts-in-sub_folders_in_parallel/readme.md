@@ -25,6 +25,8 @@ Output:
   }
 }
 ```
+So the script in [transfer.sh](https://git.jfrog.info/projects/PROFS/repos/ps_jfrog_scripts/browse/transfer-artifacts/transfer.sh) also will not work.
+
 This is because  7+ million artifacts  out of 17+ million in the Artifactory are  under one folder.
 ![Big folder in Mono Repo](images/morepo_huge_folder.jpg) .  
 
