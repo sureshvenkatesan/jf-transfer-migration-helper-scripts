@@ -153,7 +153,7 @@ screen -dmS upload-session9 bash -c '/app/sureshv/migrate_n_subfolders_in_parall
 ```
 
 
-For this customer using this script I was able to transfer 500GB of artifacts per day.
+For this customer using this script I was able to transfer `400 GB` of artifacts in the `merlin` repo per day.
 
 Then by using the  [generate_screen_commands_for_subfolders/generate_screen_commands_for_subfolders.py](../generate_screen_commands_for_subfolders/generate_screen_commands_for_subfolders.py) script as explained in
-[generate_screen_commands_for_subfolders](../generate_screen_commands_for_subfolders) which generates a bash script to  run this migrate_n_subfolders_in_parallel.sh script for 18 subfolders in parallel   , I was able to transfer almost 2 TB ( approximately 1.5 million artifacts) per day.
+[generate_screen_commands_for_subfolders](../generate_screen_commands_for_subfolders) , which generates a bash script to  run this `migrate_n_subfolders_in_parallel.sh` script for 18 subfolders in parallel   , I was able to transfer almost `2 TB` ( approximately 1.5 million artifacts) per day.
