@@ -16,15 +16,3 @@ screen -dmS myjfsession bash -c './sv_test_migrate_folder.sh usvartifactory5 liq
 
 Every time you  run the script by specifying a folder it will first do a diff between that folder and its subfolders ( between usvartifactory5 and  jfrogio  ) ,
  then  download the folders in batches and upload to jfrogio using the jfrog cli. That way we can sync the deltas as well.
-
- ---
- ## Readme for [sv_test_migrate_folder_modular.sh](sv_test_migrate_folder_modular.sh)
-
-```
- bash /Users/sureshv/myCode/github-sv/jf-transfer-migration-helper-scripts/transfer-artifacts-in-sub_folders_in_parallel/1.sh bosesh sureshv-liquid-generic bosesaas sureshv-liquid-test no  test
-
-  bash /Users/sureshv/myCode/github-sv/jf-transfer-migration-helper-scripts/transfer-artifacts-in-sub_folders_in_parallel/1.sh bosesh sureshv-liquid-generic bosesaas sureshv-liquid-test yes  test
-```
-
----
-

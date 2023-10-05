@@ -11,7 +11,7 @@
 
 #!/bin/bash
 
-# ./sv_test_migrate_n_subfolders_in_parallel.sh usvartifactory5 liquid jfrogio liquid  no  
+# ./migrate_n_subfolders_in_parallel.sh usvartifactory5 liquid jfrogio liquid  no  
 # Check if at least the first 5 required parameters are provided
 if [ $# -lt 5 ]; then
     echo "Usage: $0 <source-artifactory> <source-repo> <target-artifactory> <target-repo> <transfer yes/no> [root-folder] [migrateFolderRecursively yes/no] [semicolon separted exclude_folders]"

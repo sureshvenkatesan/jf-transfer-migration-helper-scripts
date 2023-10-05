@@ -24,10 +24,13 @@ python generate_screen_commands_for_subfolders.py \
 --source_repo merlin \
 --target_jpd jfrogio \
 --target_repo merlin \
---subfolder folder_with_293_subfolders \
---outdir "/tmp/transfer"
+--subfolder BoseCorp \
+--outdir "/tmp/output"
 ```
+Here BoseCorp is a folder under merlin repository.
+In the  "/tmp/output" you will find the  genearted script similar to [merlin_generated_screen_cmds.sh](output/merlin_generated_screen_cmds.sh) .
 
+You can run the script
 ## Prerequisites
 Before running the script, ensure you have the following:
 
