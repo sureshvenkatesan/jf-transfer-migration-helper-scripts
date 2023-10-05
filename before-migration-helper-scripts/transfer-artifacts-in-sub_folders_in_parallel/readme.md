@@ -1,5 +1,33 @@
 # Artifactory Migration Script
 
+When migrating a repo using the [jf rt transfer-files](https://jfrog.com/help/r/jfrog-cli/step-5-push-the-files-from-the-source-to-the-target-instance) tool or via push replication , it may fail 
+as  explained in [Why Large Repository Push Replications Can Fail](https://jfrog.com/help/r/why-large-repository-push-replications-can-fail/why-large-repository-push-replications-can-fail)
+
+For example , the replication status shows:
+```
+jf rt curl -k -n -XGET "/api/replication/merlin" --server-id usvartifactory5
+
+Output:
+{
+  "status" : "error",
+  "lastCompleted" : "2023-10-04T15:37:45.102Z",
+  "targets" : [ {
+    "url" : "https://xyz.jfrog.io/artifactory/merlin/",
+    "repoKey" : "merlin",
+    "status" : "error",
+    "lastCompleted" : "2023-10-04T15:37:45.102Z"
+  } ],
+  "repositories" : {
+    "merlin" : {
+      "status" : "error",
+      "lastCompleted" : "2023-10-04T15:37:45.102Z"
+    }
+  }
+}
+```
+This is because  7+ million artifacts  out of 17+ million in the Artifactory are  under one folder.
+![Big folder in Mono Repo](images/morepo_huge_folder.jpg) .  
+
 This Bash script is designed to migrate artifacts from one Artifactory instance to another. It supports migrating files and subfolders recursively while providing the option to transfer only the root folder.
 It also PATCHES the properties for the migrated artifacts.
 
@@ -22,7 +50,7 @@ It also PATCHES the properties for the migrated artifacts.
 
 The script requires the following tools on a linux/unix box ( it does not work on mac OS yet)  and assumes the jf is configured to connect to both   source and target Artifactory instances :
 ```
-jf
+jf ( which you can install using "sudo yum install jf")
 comm ( which you can install using "sudo yum install coreutils")
 tr
 sed
