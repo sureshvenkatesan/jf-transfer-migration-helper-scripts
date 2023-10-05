@@ -25,7 +25,6 @@ Output:
   }
 }
 ```
-So the script in [transfer.sh](https://git.jfrog.info/projects/PROFS/repos/ps_jfrog_scripts/browse/transfer-artifacts/transfer.sh) also will not work for this monorepo.
 
 This is because  7+ million artifacts  out of 17+ million in the Artifactory are  under one folder in the monorepo and so generating the filelist will timeout.
 ![Big folder in Mono Repo](images/morepo_huge_folder.jpg) .  
@@ -62,8 +61,10 @@ It fails with:
 15:35:44 [🚨Error] copy finished with errors, please review the logs
 ```
 
-To overcome this issue the  [migrate_n_subfolders_in_parallel.sh](migrate_n_subfolders_in_parallel.sh) Bash script is designed to :
-- migrate artifacts in the above mentioned monorepo from the source Artifactory instance to the target Artifactory instance as it supports migrating files and subfolders recursively . 
+To overcome this issue I reviewd the  [transfer.sh](https://git.jfrog.info/projects/PROFS/repos/ps_jfrog_scripts/browse/transfer-artifacts/transfer.sh) , but that will also not work for this monorepo. 
+
+So I improved on the the `transfer.sh` and wrote this [migrate_n_subfolders_in_parallel.sh](migrate_n_subfolders_in_parallel.sh) Bash script which can :
+- migrate artifacts in the above mentioned monorepo from the source Artifactory instance to the target Artifactory instance as it supports migrating files and subfolders by traversing the tree recursively until it finds the leaf folder and then works it way up the tree. 
 - It also provides the option to transfer only the files in root folder ( and not the subfolders).
 - It also PATCHES the properties for all the migrated artifacts.
 
