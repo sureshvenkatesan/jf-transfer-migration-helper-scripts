@@ -103,6 +103,7 @@ To exclude certain folders from transferring to target artifactory you can pass 
 ```
 ./migrate_n_subfolders_in_parallel.sh ncr ndce-releases ncratleostest ndce-releases yes . yes "folder1;folder2"
 ```
+For this customer using this script I was able to transfer 500GB of artifacts per day.
 
-You can parallelize running this script for subfolders as mentioned in 
-[generate_screen_commands_for_subfolders](../generate_screen_commands_for_subfolders)
+Then by using the  [generate_screen_commands_for_subfolders/generate_screen_commands_for_subfolders.py](../generate_screen_commands_for_subfolders/generate_screen_commands_for_subfolders.py) script as explained in
+[generate_screen_commands_for_subfolders](../generate_screen_commands_for_subfolders) which generates a bash script to  run this script for 18 subfolders in parallel   , I was able to transfer almost 2 TB ( apporximately 1.5 million artifacts) per day.
