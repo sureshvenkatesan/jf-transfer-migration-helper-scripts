@@ -65,7 +65,14 @@ The script creates an "output" folder and runs the migration inside it. It proce
 - The script logs :
     - all the successful  uploads to output/successful_commands.txt
     - If there are failures it logs to  output/failed_commands.txt ( note: you may not see the failed_commands.txt if there are not upload failures).
-
+- When the script completes , in the output/successful_commands.txt you should see:
+```
+All transfers for $source_repo completed
+```
+For example for the merlin repo you will see:
+```
+All transfers for merlin completed
+```
 ## Configuration
 - parallel_count: Controls the maximum number of parallel execution threads.
 - failed_commands_file: Records failed commands .
@@ -103,7 +110,14 @@ To exclude certain folders from transferring to target artifactory you can pass 
 ```
 ./migrate_n_subfolders_in_parallel.sh ncr ndce-releases ncratleostest ndce-releases yes . yes "folder1;folder2"
 ```
+
+You can run it using screen utility using:
+```
+screen -dmS upload-session9 bash -c '/app/sureshv/migrate_n_subfolders_in_parallel.sh usvartifactory5 merlin jfrogio merlin  yes   2>&1 | tee upload-session9.log; exec bash'
+```
+
+
 For this customer using this script I was able to transfer 500GB of artifacts per day.
 
 Then by using the  [generate_screen_commands_for_subfolders/generate_screen_commands_for_subfolders.py](../generate_screen_commands_for_subfolders/generate_screen_commands_for_subfolders.py) script as explained in
-[generate_screen_commands_for_subfolders](../generate_screen_commands_for_subfolders) which generates a bash script to  run this script for 18 subfolders in parallel   , I was able to transfer almost 2 TB ( apporximately 1.5 million artifacts) per day.
+[generate_screen_commands_for_subfolders](../generate_screen_commands_for_subfolders) which generates a bash script to  run this migrate_n_subfolders_in_parallel.sh script for 18 subfolders in parallel   , I was able to transfer almost 2 TB ( approximately 1.5 million artifacts) per day.
