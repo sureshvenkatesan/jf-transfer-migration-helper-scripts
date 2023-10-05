@@ -59,21 +59,21 @@ The script creates an "output" folder and runs the migration inside it. It proce
 
 You can also give a specific folder or file path , for example:
 ```
-./sv_test_migrate_n_subfolders_in_parallel.sh ncr ndce-releases ncratleostest ndce-releases yes com/ncr/ndce/tools/ndce-host
+./migrate_n_subfolders_in_parallel.sh ncr ndce-releases ncratleostest ndce-releases yes com/ncr/ndce/tools/ndce-host
 ```
 or
 ```
-./sv_test_migrate_n_subfolders_in_parallel.sh ncr ndce-releases ncratleostest ndce-releases yes com/ncr/ndce/tools/ndce-host/ndce-host-.pom
+./migrate_n_subfolders_in_parallel.sh ncr ndce-releases ncratleostest ndce-releases yes com/ncr/ndce/tools/ndce-host/ndce-host-.pom
 ```
 
 To migrate only the root folder run as:
 ```
-./sv_test_migrate_n_subfolders_in_parallel.sh ncr ndce-releases ncratleostest ndce-releases yes com/ncr/ndce/tools/ndce-host yes
+./migrate_n_subfolders_in_parallel.sh ncr ndce-releases ncratleostest ndce-releases yes com/ncr/ndce/tools/ndce-host yes
 ```
 To exclude certain folders from transferring to target artifactory you can pass as 
 [semicolon-separated exclude_folders] as:
 ```
-./sv_test_migrate_n_subfolders_in_parallel.sh ncr ndce-releases ncratleostest ndce-releases yes . yes "folder1;folder2"
+./migrate_n_subfolders_in_parallel.sh ncr ndce-releases ncratleostest ndce-releases yes . yes "folder1;folder2"
 ```
 
 You can parallelize running this script for subfolders as mentioned in 

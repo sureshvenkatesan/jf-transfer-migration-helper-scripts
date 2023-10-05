@@ -1,4 +1,15 @@
-# python generate_screen_commands_for_subfolders.py <repo> <subfolder source_jpd
+    """
+    Usage:
+    python ~/generate_screen_commands_for_subfolders/generate_screen_commands_for_subfolders.py \
+        --source_jpd  usvartifactory5 \
+        --source_repo merlin \
+        --target_jpd jfrogio \
+        --target_repo merlin \
+        --root_folder folder_with_may_subfolders \
+        --path_to_migrate_subfolder_script "/app/sureshv/migrate_n_subfolders_in_parallel.sh" \
+        --max_subfolders_to_migrate_in_parallel 18 \
+        --outdir "~/generate_screen_commands_for_subfolders/output"
+    """
 
 import argparse
 import json
@@ -17,19 +28,18 @@ def parse_artifactory_response(response_json, subfolder):
         print("Error parsing JSON response.")
         return []
 
-def generate_screen_commands(source_jpd, source_repo, target_jpd, target_repo, folder_list):
+def generate_screen_commands(args, folder_list):
     screen_commands = []
 
     for i, root_folder in enumerate(folder_list, start=1):
         subfolder = os.path.join("output", str(i))
-        screen_session_name = f"{source_repo}-session{i}"
+        screen_session_name = f"{args.source_repo}-session{i}"
         screen_command = (
             f"mkdir -p {subfolder}; "
             f"pushd {subfolder}; "
             f"screen -dmS {screen_session_name} bash -c "
-            f"'/app/sureshv/sv_test_migrate_n_subfolders_in_parallel.sh "
-            f"{source_jpd} {source_repo} {target_jpd} {target_repo} yes {root_folder} yes \\\".conan\\\" 2>&1 | tee {screen_session_name}.log; exit' ; "
-            # f"usvartifactory5 {source_repo} jfrogio {target_repo} yes {root_folder} yes \\\".conan\\\" 2>&1 | tee {screen_session_name}.log; exit' ; "
+            f"'{args.path_to_migrate_subfolder_script} "
+            f"{args.source_jpd} {args.source_repo} {args.target_jpd} {args.target_repo} yes {root_folder} yes \\\".conan\\\" 2>&1 | tee {screen_session_name}.log; exit' ; "
             f"popd"
         )
         screen_commands.append(screen_command)
@@ -105,8 +115,10 @@ if __name__ == "__main__":
     parser.add_argument("--source_repo", required=True, help="Source repository")
     parser.add_argument("--target_jpd", required=True, help="Source server ID")
     parser.add_argument("--target_repo", required=True, help="Source repository")
-    parser.add_argument("--subfolder", required=True, help="Subfolder to concatenate to URIs")
-    parser.add_argument('--outdir', default=".", help='Output Directory for the geneated screen commands bash script')
+    parser.add_argument("--root_folder", required=True, help="The root folder which have many subfolders to migrate - for which replication fails")
+    parser.add_argument("--path_to_migrate_subfolder_script", default="/app/sureshv/migrate_n_subfolders_in_parallel.sh", help="Path to the migrate_n_subfolders_in_parallel.sh script")
+    parser.add_argument("--max_subfolders_to_migrate_in_parallel", type=int, default=10, help="Max subfolders to migrate in parallel")
+    parser.add_argument('--outdir', default=".", help='Output Directory for the generated screen commands bash script')
    
     args = parser.parse_args()
     
@@ -114,7 +126,7 @@ if __name__ == "__main__":
     command = [
         "jf", "rt", "curl",
         "-k", "-XGET",
-        f"/api/storage/{args.source_repo}/{args.subfolder}?list&deep=1&depth=1&listFolders=1",
+        f"/api/storage/{args.source_repo}/{args.root_folder}?list&deep=1&depth=1&listFolders=1",
         "-L", "--server-id", args.source_jpd
     ]
 
@@ -124,17 +136,17 @@ if __name__ == "__main__":
 
         # Parse the JSON response
         response_json = completed_process.stdout
-        folder_list = parse_artifactory_response(response_json, args.subfolder)
+        folder_list = parse_artifactory_response(response_json, args.root_folder)
         
         # Print the screen commands
-        screen_commands = generate_screen_commands(args.source_jpd, args.source_repo, args.target_jpd, args.target_repo, folder_list)  # Replace "target_server_id" with your target server ID
+        screen_commands = generate_screen_commands(args, folder_list)  # Replace "target_server_id" with your target server ID
         
         # for command in screen_commands:
         #     print(command)
         
         # Generate the Bash script
-        max_jobs = 10  # Adjust the maximum number of concurrent jobs as needed
-        bash_script = generate_bash_script(screen_commands, max_jobs, args.source_repo)
+        
+        bash_script = generate_bash_script(screen_commands, args.max_subfolders_to_migrate_in_parallel, args.source_repo)
 
         # Save the Bash script to a file
         with open(modify_output_filename(args), "w") as script_file:
