@@ -25,13 +25,14 @@ python generate_screen_commands_for_subfolders.py \
     --outdir OUTDIR
 
 ```
+where:
 
---source_jpd: Source server ID.
---source_repo: Source repository.
---target_jpd: Target server ID.
---target_repo: Target repository.
---root_folder:  The root folder containing subfolders to migrate.
---path_to_migrate_subfolder_script: (Optional) The path to the [migrate_n_subfolders_in_parallel.sh](../transfer-artifacts-in-sub_folders_in_parallel/migrate_n_subfolders_in_parallel.sh)script used for migrating subfolders.
+--source_jpd: Source server ID.  
+--source_repo: Source repository.  
+--target_jpd: Target server ID.  
+--target_repo: Target repository.  
+--root_folder:  The root folder containing subfolders to migrate.  
+--path_to_migrate_subfolder_script: (Optional) The path to the [migrate_n_subfolders_in_parallel.sh](../transfer-artifacts-in-sub_folders_in_parallel/migrate_n_subfolders_in_parallel.sh)script used for migrating subfolders.  
 --outdir (optional): Output directory for the generated screen commands Bash script. Default is the current directory.
 
 ## Example:
