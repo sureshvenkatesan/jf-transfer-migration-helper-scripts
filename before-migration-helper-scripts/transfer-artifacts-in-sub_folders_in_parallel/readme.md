@@ -30,8 +30,10 @@ So the script in [transfer.sh](https://git.jfrog.info/projects/PROFS/repos/ps_jf
 This is because  7+ million artifacts  out of 17+ million in the Artifactory are  under one folder.
 ![Big folder in Mono Repo](images/morepo_huge_folder.jpg) .  
 
-This Bash script is designed to migrate artifacts from one Artifactory instance to another. It supports migrating files and subfolders recursively while providing the option to transfer only the root folder.
-It also PATCHES the properties for the migrated artifacts.
+The  [migrate_n_subfolders_in_parallel.sh](migrate_n_subfolders_in_parallel.sh) Bash script is designed to :
+- migrate artifacts in the above mentioned monorepo from the source Artifactory instance to the target Artifactory instance as it supports migrating files and subfolders recursively . 
+- It also provides the option to transfer only the files in root folder ( and not the subfolders).
+- It also PATCHES the properties for all the migrated artifacts.
 
 ## Usage
 
