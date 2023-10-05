@@ -25,12 +25,44 @@ Output:
   }
 }
 ```
-So the script in [transfer.sh](https://git.jfrog.info/projects/PROFS/repos/ps_jfrog_scripts/browse/transfer-artifacts/transfer.sh) also will not work.
+So the script in [transfer.sh](https://git.jfrog.info/projects/PROFS/repos/ps_jfrog_scripts/browse/transfer-artifacts/transfer.sh) also will not work for this monorepo.
 
-This is because  7+ million artifacts  out of 17+ million in the Artifactory are  under one folder.
+This is because  7+ million artifacts  out of 17+ million in the Artifactory are  under one folder in the monorepo and so generating the filelist will timeout.
 ![Big folder in Mono Repo](images/morepo_huge_folder.jpg) .  
 
-The  [migrate_n_subfolders_in_parallel.sh](migrate_n_subfolders_in_parallel.sh) Bash script is designed to :
+This `merlin` mono-repo has 23.48 TB data  and 9.5 million artifacts.
+
+Another `liquid` monorepo which is only 1.61 TB has simlar issue ( most of the artifacts are under ` liquid/BoseCorp/`)  and so following fails :
+```
+jf rt cp liquid/BoseCorp/  sureshv-liquid-generic/ --flat=false --threads=8 --dry-run=false --server-id bosesh
+```
+
+It fails with:
+```
+15:23:08 [Debug] JFrog CLI version: 2.46.2
+15:23:08 [Debug] OS/Arch: darwin/amd64
+15:23:08 [🔵Info] Searching artifacts...
+15:23:08 [Debug] Usage Report: Sending info...
+15:23:08 [Debug] Searching Artifactory using AQL query:
+ items.find({"type":"any","path":{"$ne":"."},"$or":[{"$and":[{"repo":"liquid","path":"BoseCorp","name":{"$match":"*"}}]},{"$and":[{"repo":"liquid","path":{"$match":"BoseCorp/*"},"name":{"$match":"*"}}]}]}).include("name","repo","path","actual_md5","actual_sha1","sha256","size","type","modified","created")
+15:23:08 [Debug] Sending HTTP POST request to: https://rtf.bose.com/artifactory/api/search/aql
+15:23:08 [Debug] Sending HTTP GET request to: https://rtf.bose.com/artifactory/api/system/version
+15:23:08 [Debug] Artifactory response: 200 OK
+15:23:08 [Debug] JFrog Artifactory version is: 7.41.14
+15:23:08 [Debug] Sending HTTP POST request to: https://rtf.bose.com/artifactory/api/system/usage
+15:23:09 [Debug] Usage Report: Usage info sent successfully. Artifactory response: 200 OK
+
+15:24:09 [Debug] Artifactory response: 200 OK
+15:24:09 [Debug] Streaming data to file...
+15:35:23 [Debug] Finished streaming data successfully.
+15:35:44 [🚨Error] unexpected EOF
+15:35:44 [🚨Error] unexpected EOF
+15:35:44 [🚨Error] unexpected EOF
+15:35:44 [🚨Error] copy finished with errors, please review the logs
+15:35:44 [🚨Error] copy finished with errors, please review the logs
+```
+
+To overcome this issue the  [migrate_n_subfolders_in_parallel.sh](migrate_n_subfolders_in_parallel.sh) Bash script is designed to :
 - migrate artifacts in the above mentioned monorepo from the source Artifactory instance to the target Artifactory instance as it supports migrating files and subfolders recursively . 
 - It also provides the option to transfer only the files in root folder ( and not the subfolders).
 - It also PATCHES the properties for all the migrated artifacts.
