@@ -46,4 +46,6 @@ Run as
 ./transfer-files.sh <JF CLI Source Server ID> <JF CLI Target Server ID> <REPO_NAME> yes | sh
 ```
 There are ways to run it muti-threaded as mentioned in 
-https://git.jfrog.info/projects/PROFS/repos/ps_jfrog_scripts/browse/transfer-artifacts
+- https://git.jfrog.info/projects/PROFS/repos/ps_jfrog_scripts/browse/transfer-artifacts
+
+- [runcommand_in_parallel_and_log_outcome.sh](../runcommand_in_parallel_as_bash_jobs/runcommand_in_parallel_and_log_outcome.sh)
