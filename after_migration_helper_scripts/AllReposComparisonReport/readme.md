@@ -57,7 +57,7 @@ python AllReposComparisonReport/compare_repo_list_details_in_source_vs_target_rt
  --source_server_id ncr \
  --target_server_id ncratleostest \
  --total_repos_customer_will_migrate 0 \
- --num_buckets_for_jfrog_ps_to_migrate 3
+ --num_buckets_for_migrating_remaining_repos 3
 ```
 This will generate the report in [comparison.txt](output/comparison.txt)
 
@@ -71,7 +71,7 @@ This will generate the report in [comparison.txt](output/comparison.txt)
 --source_server_id: Server ID of the source Artifactory.
 --target_server_id: Server ID of the target Artifactory.
 --total_repos_customer_will_migrate (optional): Specify the number of repositories that the customer is responsible for migrating.
---num_buckets_for_jfrog_ps_to_migrate (optional): Specify the number of Client VMs  used to run "jf rt transfer-files" . So that
+--num_buckets_for_migrating_remaining_repos (optional): Specify the number of Client VMs  used to run "jf rt transfer-files" . So that
                                                   the comparison report can bucket the repos and genetrate the "jf rt transfer-files" command.
 --repo_threshold_in_gb (optional): Threshold in gigabytes (GB) for source repositories to generate alternate migrate commands.
 --print_alternative_transfer (optional): Include this flag to print alternative transfer methods for large source repositories.
