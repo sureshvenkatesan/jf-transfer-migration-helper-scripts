@@ -38,3 +38,12 @@ After fixing that you should see the replication working :
 
 ```
 
+To sync the binaries that are missing on the target , take the 
+filepaths_nometadatafiles.txt got from [repoDiff/repodiff.py](repoDiff/repodiff.py) and use this as   the input file for [transfer-files.sh](https://github.com/shivaraman83/security-entities-migration/blob/main/transfer-files.sh) script. So please copy the transfer-files.sh file to the respective folder
+
+Run as 
+```
+./transfer-files.sh <JF CLI Source Server ID> <JF CLI Target Server ID> <REPO_NAME> yes | sh
+```
+There are ways to run it muti-threaded as mentioned in 
+https://git.jfrog.info/projects/PROFS/repos/ps_jfrog_scripts/browse/transfer-artifacts

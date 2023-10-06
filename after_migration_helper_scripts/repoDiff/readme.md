@@ -41,3 +41,7 @@ Print all lines from the file that do not match the pattern "-202":
 ```
 awk '!/-202/' filepaths_nometadatafiles.txt
 ```
+
+Alternative scripts/plugin:
+https://git.jfrog.info/projects/PROFS/repos/ps_jfrog_scripts/browse/compare_repos
+https://git.jfrog.info/projects/PROFS/repos/jfrog-cli-plugin-compare/browse
