@@ -8,7 +8,7 @@ python compare_repo_list_details_in_source_vs_target_rt_after_migration.py \
     --source_server_id ncr \
     --target_server_id ncratleostest \
     --total_repos_customer_will_migrate 30 \
-    --num_buckets_for_jfrog_ps_to_migrate 3 \
+    --num_buckets_for_migrating_remaining_repos 3 \
     --repo_threshold_in_gb 1000 \
     --print_alternative_transfer
 """
@@ -26,7 +26,7 @@ def parse_args():
     parser.add_argument('--source_server_id', required=True, help='server-id of source artifactory')
     parser.add_argument('--target_server_id', required=True, help='server-id of target artifactory')
     parser.add_argument('--total_repos_customer_will_migrate', type=int, default=30, help='How many repos customer is responsible to migrate')
-    parser.add_argument('--num_buckets_for_jfrog_ps_to_migrate', type=int, default=2, help='How many repo buckets Jfrog PS is responsible to migrate')
+    parser.add_argument('--num_buckets_for_migrating_remaining_repos', type=int, default=2, help='How many buckets to divide the remaining repos requiring migration')
     parser.add_argument('--repo_threshold_in_gb', type=int, default=500, help='Threshold in GB for source repos to generate alternate migrate commands')
     parser.add_argument('--print_alternative_transfer', action='store_true', default=False, help='Print alternative transfer method for big source repos')
 
@@ -161,7 +161,7 @@ def print_alternative_transfer_method(output_file,big_source_repos, source_serve
 
 def bucket_repositories(repos_to_bucket, args):
     # Calculate the number of buckets
-    num_buckets = min(args.num_buckets_for_jfrog_ps_to_migrate, len(repos_to_bucket))
+    num_buckets = min(args.num_buckets_for_migrating_remaining_repos, len(repos_to_bucket))
 
     if num_buckets == 0:
         # Handle the case where num_buckets is 0
