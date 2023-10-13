@@ -1,6 +1,8 @@
 # JFrog User Sync Script
 
-This script is used to synchronize specified user configurations, such as group membership and permission target membership, from a source JFrog Platform instance to a destination JFrog Platform instance.
+The primary function of this script is to facilitate the synchronization of user-specific configurations, encompassing group memberships and permission target associations, for a specified set of users. This synchronization occurs between a source JFrog Platform instance and a destination JFrog Platform instance.
+
+It's crucial to understand that this script functions specifically at the user level, focusing on identifying and handling permission adjustments from the standpoint of individual users. If you happen to make direct modifications to groups within a permission target, it's important to note that this script may not address such changes. Consequently, it can serve as a valuable reference for customizing the script to accommodate similar scenarios.
 
 **Note:** REST API calls require JFrog Platform version >= 7.49.3.
 
