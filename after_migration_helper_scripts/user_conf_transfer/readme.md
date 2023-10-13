@@ -46,7 +46,7 @@ Then for a real execution pass value "no" for  DRY_RUN.
 
 `Sample Output in DRY_RUN mode "yes" :`
 
-
+```
 SRC_JPD_URL: https://srcjpd.jfrog.io
 DST_JPD_URL: https://dstjpd.jfrog.io
 USER_LIST: user1@xyz.com
@@ -72,3 +72,4 @@ INFO: Checking permission target: ASD-All for user user1@xyz.com
 INFO: Permission target ASD-All is already present in destination JPD.
 INFO: No updates needed on existing permission target ASD-All.
 THE END
+```
