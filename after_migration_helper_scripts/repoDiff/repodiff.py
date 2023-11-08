@@ -1,10 +1,12 @@
-import argparse
 import os
+import argparse
 import subprocess
 import json
 from datetime import datetime
+from urllib.parse import urljoin
 
 def fetch_repository_data(artifactory, repo, output_file):
+    # Got the storage API params from RTDEV-34024
     command = [
         "jf", "rt", "curl",
         "-X", "GET",
@@ -84,15 +86,23 @@ def write_filepaths_nometadata(unique_uris,filepaths_nometadata_file,):
 
 def write_artifact_stats_sort_desc(artifactory, repo, unique_uris, output_file):
     artifact_info = []
+    total_commands = len(unique_uris)
 
-    for uri in unique_uris:
+    for i, uri in enumerate(unique_uris, start=1):
+        full_uri = urljoin(f"/api/storage/{repo}/", uri)
         command = [
             "jf", "rt", "curl",
             "-X", "GET",
-            f"/api/storage/{repo}/{uri}?stats",
+            full_uri,
             "-L", "--server-id", artifactory
         ]
-        print("Executing command:", " ".join(command))
+        # command = [
+        #     "jf", "rt", "curl",
+        #     "-X", "GET",
+        #     f"/api/storage/{repo}/{uri}?stats",
+        #     "-L", "--server-id", artifactory
+        # ]
+        print(f"Executing command {i}/{total_commands}: {' '.join(command)}")
 
         try:
             result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
@@ -120,6 +130,35 @@ def write_artifact_stats_sort_desc(artifactory, repo, unique_uris, output_file):
         # Write the values for each artifact in a single line
         for uri, last_downloaded, timestamp_utc in sorted_artifact_info:
             out_file.write(f"{last_downloaded}\t{timestamp_utc}\t{uri}\n")
+
+def write_artifact_stats_from_source_data(source_data, unique_uris, output_file):
+    artifact_info = []
+
+    for uri in unique_uris:
+        # Find the corresponding entry in source_data by matching the "uri"
+        matching_entry = next((item for item in source_data['files'] if item['uri'] == uri), None)
+
+        if matching_entry:
+            # Extract the "artifactory.stats" timestamp if available, otherwise use a default timestamp
+            # timestamp_utc = response_data["mdTimestamps"].get("artifactory.stats") or response_data["lastModified"]
+            timestamp_utc = matching_entry["mdTimestamps"].get("artifactory.stats", "1900-01-01T00:00:00.000Z")
+
+            # Append to the list
+            artifact_info.append((uri, timestamp_utc))
+        else:
+            # If no matching entry is found, use a default timestamp
+            artifact_info.append((uri, "1900-01-01T00:00:00.000Z"))
+
+    # Sort the artifact_info list in descending order of timestamp_utc
+    sorted_artifact_info = sorted(artifact_info, key=lambda x: x[1], reverse=True)
+
+    # Write the headers to the output file
+    with open(output_file, 'w') as out_file:
+        out_file.write("Download Timestamp\tURI\n")
+
+        # Write the values for each artifact in a single line
+        for uri, timestamp_utc in sorted_artifact_info:
+            out_file.write(f"{timestamp_utc}\t{uri}\n")
 
 
 def main():
@@ -167,7 +206,9 @@ def main():
     # fetch artifact statistics, extract the relevant information, and sort the lines in descending order of the lastDownloaded timestamp
     # to a file in the output folder
     filepaths_uri_stats_file=os.path.join(output_dir, "filepaths_uri_lastDownloaded_desc.txt")
-    write_artifact_stats_sort_desc(args.source_artifactory, args.source_repo, unique_uris, filepaths_uri_stats_file)
+    # write_artifact_stats_sort_desc(args.source_artifactory, args.source_repo, unique_uris, filepaths_uri_stats_file)
+    write_artifact_stats_from_source_data( source_data, unique_uris,
+                                        filepaths_uri_stats_file)
 
     # Filter and write the unique URIs "without unwanted files" , to a file in the output folder
     filepaths_nometadata_file = os.path.join(output_dir, "filepaths_nometadatafiles.txt")

@@ -45,3 +45,52 @@ awk '!/-202/' filepaths_nometadatafiles.txt
 Alternative scripts/plugin:
 https://git.jfrog.info/projects/PROFS/repos/ps_jfrog_scripts/browse/compare_repos
 https://git.jfrog.info/projects/PROFS/repos/jfrog-cli-plugin-compare/browse
+
+---
+Note:
+
+The output of
+```text
+jf rt curl -XGET "/api/storage/APM123-att-repository-gold-local/?list&deep=1&listFolders=0&mdTimestamps=1&statsTimestamps=1&includeRootPath=1"
+```
+is the following and it already has the last download stats in "artifactory.stats". So use the source_data to get 
+```text
+
+{
+  "uri" : "https://proservices.jfrog.io/artifactory/api/storage/APM123-att-repository-gold-local",
+  "created" : "2023-11-08T06:02:37.392Z",
+  "files" : [ {
+    "uri" : "/",
+    "size" : -1,
+    "lastModified" : "2023-11-01T15:33:50.186Z",
+    "folder" : true
+  }, {
+    "uri" : "/org/jfrog/test/multi/4.0/multi-4.0.pom",
+    "size" : 3270,
+    "lastModified" : "2023-11-01T15:41:53.497Z",
+    "folder" : false,
+    "sha1" : "95a4881c266fd1d4679e1008754f45b19cb4da82",
+    "sha2" : "6c258cb4cf2a34eed220d3144e4c873eaefd5346f5382f07b7fd5e930bc4d97c",
+    "mdTimestamps" : {
+      "properties" : "2023-11-01T15:59:51.694Z"
+    }
+  }, {
+    "uri" : "/org/jfrog/test/multi/maven-metadata.xml",
+    "size" : 366,
+    "lastModified" : "2023-11-01T15:59:51.116Z",
+    "folder" : false,
+    "sha1" : "8aaf767b2ed90f5614ab7c600dc0dda967f43923",
+    "sha2" : "93cd16c957e5cfc44dfaebe7ac54c353ac92eea796f66b45e4bd51d0262582e9",
+    "mdTimestamps" : {
+      "artifactory.stats" : "2023-11-08T04:08:23.894Z"
+    }
+}, {
+    "uri" : "/org/jfrog/test/multi3/maven-metadata.xml",
+    "size" : 367,
+    "lastModified" : "2023-11-01T15:59:51.124Z",
+    "folder" : false,
+    "sha1" : "ffea43340e639fa5c76fe664c2a5ce87ca81f090",
+    "sha2" : "c17e801615a49a46db3d6ece16b66060d7e1084bc09ff535764cc470748e969b"
+  } ]
+}
+```
