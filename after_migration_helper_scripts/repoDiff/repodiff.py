@@ -5,6 +5,7 @@ import json
 from datetime import datetime
 
 
+# Fetch artifacts list  from the  repository in the given artifactory.
 def fetch_repository_data(artifactory, repo, output_file):
     # Got the storage API params from RTDEV-34024
     command = [
@@ -21,10 +22,12 @@ def fetch_repository_data(artifactory, repo, output_file):
     except subprocess.CalledProcessError as e:
         print("Command failed with error:", e.stderr)
 
+# Load the contents of the JSON files
 def load_json_file(file_path):
     with open(file_path, 'r') as json_file:
         return json.load(json_file)
 
+# Write the unique URIs to a file in the output folder
 def write_unique_uris(output_file, unique_uris,total_size):
     file_extension_counts = {}
     with open(output_file, 'w') as uri_file:
@@ -60,11 +63,13 @@ def write_unique_uris(output_file, unique_uris,total_size):
             uri_file.write(f"{extension}: {count}\n")
 
 
+# Write the unique URIs "with repo prefix" to a file in the output folder
 def write_unique_uris_with_repo_prefix(output_file, unique_uris, source_rt_repo_prefix):
     with open(output_file, 'w') as uri_file:
         for uri in unique_uris:
             uri_file.write(source_rt_repo_prefix + uri + '\n')
 
+# Filter and write the unique URIs "without unwanted files" , to a file in the output folder
 def write_filepaths_nometadata(unique_uris,filepaths_nometadata_file,):
     with  open(filepaths_nometadata_file, "w") as filepaths_nometadata:
         for uri in unique_uris:
@@ -84,6 +89,8 @@ def write_filepaths_nometadata(unique_uris,filepaths_nometadata_file,):
             #     print(f"Writing: {file_name}")
             #     filepaths_nometadata.write(file_name + '\n')
 
+#  Get the download stats for every artifact uri in the unique_uris list from the source artifactory. But this takes
+#  a long time - 1+ hour for 13K artifacts. So use the write_artifact_stats_from_source_data function instead.
 def write_artifact_stats_sort_desc(artifactory, repo, unique_uris, output_file):
     artifact_info = []
     total_commands = len(unique_uris)
@@ -126,6 +133,9 @@ def write_artifact_stats_sort_desc(artifactory, repo, unique_uris, output_file):
         for uri, last_downloaded, timestamp_utc in sorted_artifact_info:
             out_file.write(f"{last_downloaded}\t{timestamp_utc}\t{uri}\n")
 
+#  Get the download stats for every artifact uri in the unique_uris list from the mdTimestamps.artifactory.stats in the
+#  source_data json itself.
+# If the artifact was never downloaded use a default timestamp of "Jan 1 , 1900"  UTC .
 def write_artifact_stats_from_source_data(source_data, unique_uris, output_file):
     artifact_info = []
 
@@ -134,7 +144,7 @@ def write_artifact_stats_from_source_data(source_data, unique_uris, output_file)
         matching_entry = next((item for item in source_data['files'] if item['uri'] == uri), None)
 
         if matching_entry:
-            # Extract the "artifactory.stats" timestamp if available, otherwise use a default timestamp
+            # Extract the "artifactory.stats" timestamp if available, otherwise use a default timestamp of "Jan 1 , 1900"
             # timestamp_utc = response_data["mdTimestamps"].get("artifactory.stats") or response_data["lastModified"]
             timestamp_utc = matching_entry["mdTimestamps"].get("artifactory.stats", "1900-01-01T00:00:00.000Z")
 
