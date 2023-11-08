@@ -80,14 +80,7 @@ def write_filepaths_nometadata(unique_uris,filepaths_nometadata_file,):
             else:
                 print(f"Writing: {file_name}")
                 filepaths_nometadata.write(file_name + '\n')
-            # for keyword in ["maven-metadata.xml", "Packages.bz2", ".gemspec.rz",
-            #                                             "Packages.gz", "Release", ".json", "Packages", "by-hash", "filelists.xml.gz", "other.xml.gz", "primary.xml.gz", "repomd.xml", "repomd.xml.asc", "repomd.xml.key"]:
-            #     if keyword in file_name:
-            #         print(f"Excluded: as {keyword} in {file_name}")
-            #         break
-            # else:
-            #     print(f"Writing: {file_name}")
-            #     filepaths_nometadata.write(file_name + '\n')
+
 
 #  Get the download stats for every artifact uri in the unique_uris list from the source artifactory. But this takes
 #  a long time - 1+ hour for 13K artifacts. So use the write_artifact_stats_from_source_data function instead.
