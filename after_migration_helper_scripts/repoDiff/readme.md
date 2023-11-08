@@ -54,6 +54,9 @@ The output of
 jf rt curl -XGET "/api/storage/APM123-att-repository-gold-local/?list&deep=1&listFolders=0&mdTimestamps=1&statsTimestamps=1&includeRootPath=1"
 ```
 is the following and it already has the last download stats in "artifactory.stats". So use the source_data to get 
+the mdTimestamps.artifactory.stats . If the artifact was not downloaded at all the , you could use the 
+"lastModified" date. But I chose to use the  default last download stats as  "1900-01-01T00:00:00.000Z." if the 
+artifact was never downloaded.
 ```text
 
 {
