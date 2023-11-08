@@ -2,6 +2,7 @@ import argparse
 import os
 import subprocess
 import json
+from datetime import datetime
 
 def fetch_repository_data(artifactory, repo, output_file):
     command = [
@@ -81,6 +82,45 @@ def write_filepaths_nometadata(unique_uris,filepaths_nometadata_file,):
             #     print(f"Writing: {file_name}")
             #     filepaths_nometadata.write(file_name + '\n')
 
+def write_artifact_stats_sort_desc(artifactory, repo, unique_uris, output_file):
+    artifact_info = []
+
+    for uri in unique_uris:
+        command = [
+            "jf", "rt", "curl",
+            "-X", "GET",
+            f"/api/storage/{repo}/{uri}?stats",
+            "-L", "--server-id", artifactory
+        ]
+        print("Executing command:", " ".join(command))
+
+        try:
+            result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+            print("Command executed successfully.")
+
+            # Parse the JSON response
+            response_data = json.loads(result.stdout)
+
+            # Extract relevant information
+            last_downloaded = response_data["lastDownloaded"]
+            timestamp_utc = datetime.utcfromtimestamp(last_downloaded / 1000.0).strftime('%Y-%m-%d %H:%M:%S UTC')
+
+            # Append to the list
+            artifact_info.append((uri, last_downloaded, timestamp_utc))
+        except subprocess.CalledProcessError as e:
+            print("Command failed with error:", e.stderr)
+
+    # Sort the artifact_info list in descending order of lastDownloaded
+    sorted_artifact_info = sorted(artifact_info, key=lambda x: x[1], reverse=True)
+
+    # Write the headers to the output file
+    with open(output_file, 'w') as out_file:
+        out_file.write("lastDownloaded\tTimestamp (Epoch Millis)\tURI\n")
+
+        # Write the values for each artifact in a single line
+        for uri, last_downloaded, timestamp_utc in sorted_artifact_info:
+            out_file.write(f"{last_downloaded}\t{timestamp_utc}\t{uri}\n")
+
 
 def main():
     # Parse command-line arguments
@@ -123,6 +163,11 @@ def main():
     prefix = f"{args.source_artifactory}/artifactory/{args.source_repo}"
     filepaths_uri_file=os.path.join(output_dir, "filepaths_uri.txt")
     write_unique_uris_with_repo_prefix(filepaths_uri_file,unique_uris,prefix)
+
+    # fetch artifact statistics, extract the relevant information, and sort the lines in descending order of the lastDownloaded timestamp
+    # to a file in the output folder
+    filepaths_uri_stats_file=os.path.join(output_dir, "filepaths_uri_lastDownloaded_desc.txt")
+    write_artifact_stats_sort_desc(args.source_artifactory, args.source_repo, unique_uris, filepaths_uri_stats_file)
 
     # Filter and write the unique URIs "without unwanted files" , to a file in the output folder
     filepaths_nometadata_file = os.path.join(output_dir, "filepaths_nometadatafiles.txt")
