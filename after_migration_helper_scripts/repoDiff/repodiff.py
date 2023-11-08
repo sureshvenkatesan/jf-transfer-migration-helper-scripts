@@ -3,7 +3,7 @@ import argparse
 import subprocess
 import json
 from datetime import datetime
-from urllib.parse import urljoin
+
 
 def fetch_repository_data(artifactory, repo, output_file):
     # Got the storage API params from RTDEV-34024
@@ -89,19 +89,14 @@ def write_artifact_stats_sort_desc(artifactory, repo, unique_uris, output_file):
     total_commands = len(unique_uris)
 
     for i, uri in enumerate(unique_uris, start=1):
-        full_uri = urljoin(f"/api/storage/{repo}/", uri)
+        full_uri = f"/api/storage/{repo}/{uri.lstrip('/')}?stats"
         command = [
             "jf", "rt", "curl",
             "-X", "GET",
             full_uri,
             "-L", "--server-id", artifactory
         ]
-        # command = [
-        #     "jf", "rt", "curl",
-        #     "-X", "GET",
-        #     f"/api/storage/{repo}/{uri}?stats",
-        #     "-L", "--server-id", artifactory
-        # ]
+
         print(f"Executing command {i}/{total_commands}: {' '.join(command)}")
 
         try:
