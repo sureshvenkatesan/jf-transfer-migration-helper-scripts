@@ -53,6 +53,22 @@ def extract_repo_details(repo_keys, source_data, target_data):
         })
     return repo_details_of_interest
 
+
+#To calculate the space difference based on the presence of "usedSpaceInBytes" or "usedSpace" and handle different
+# units (MB, GB, TB) for "usedSpace"
+
+def convert_used_space_to_bytes(used_space_str):
+    # Convert used space with units (MB, GB, TB) to bytes
+    if "MB" in used_space_str:
+        return float(used_space_str.replace(" MB", "")) * 1024 * 1024
+    elif "GB" in used_space_str:
+        return float(used_space_str.replace(" GB", "")) * 1024 * 1024 * 1024
+    elif "TB" in used_space_str:
+        return float(used_space_str.replace(" TB", "")) * 1024 * 1024 * 1024 * 1024
+    elif "bytes" in used_space_str:
+        return float(used_space_str.replace(" bytes", ""))
+    else:
+        return 0
 def generate_comparison_output(repo_details_of_interest, args):
     comparison_output_tabular = []
     comparison_output_tabular.append("{:<64} {:<15} {:<15} {:<15} {:<15} {:<20} {:<20} {:<25} {:<20}".format("Repo Key",
@@ -67,20 +83,35 @@ def generate_comparison_output(repo_details_of_interest, args):
                                                                                                              "Used Space (Target)",
                                                                                                              "SpaceInBytes Difference",
                                                                                                              "Remaining Transfer %"))
-    comparison_output_tabular.append("="*200)
+    comparison_output_tabular.append("=" * 200)
 
     repos_with_space_difference = []
     repos_with_both_differences = []
 
-    # Calculate space difference and sort by it in descending order
+
+
+    # sort repo_details_of_interest in descending order based on the space difference between repo['source'] and repo[
+    # 'target']
+    # The target 7.x always  has 'usedSpaceInBytes'. So if the repo['source']  is RT 6.x then use 'usedSpace' for
+    # target 7.x  though the target has  'usedSpaceInBytes'
+
     repo_details_of_interest.sort(
         key=lambda repo: (
-            repo['source'].get('usedSpaceInBytes', 0) if repo.get('source') is not None else 0
-        ) - (
-            repo['target'].get('usedSpaceInBytes', 0) if repo.get('target') is not None else 0
+                (
+                    int(repo['source'].get('usedSpaceInBytes', '0'))
+                    if 'usedSpaceInBytes' in repo['source']
+                    else convert_used_space_to_bytes(repo['source'].get('usedSpace', '0'))
+                )
+                -
+                (
+                    int(repo['target'].get('usedSpaceInBytes', '0'))
+                    if 'usedSpaceInBytes' in repo['source']
+                    else convert_used_space_to_bytes(repo['target'].get('usedSpace', '0'))
+                )
         ),
         reverse=True
     )
+
 
     # Initialize a list to track big source repos
     big_source_repos = []
@@ -95,10 +126,19 @@ def generate_comparison_output(repo_details_of_interest, args):
         source_files_count = source_details.get('filesCount', 0)
         target_files_count = target_details.get('filesCount', 0)
 
-        source_space_in_bytes = source_details.get('usedSpaceInBytes', 0)
-        target_space_in_bytes = target_details.get('usedSpaceInBytes', 0)
+        source_space_in_bytes = (
+            int(source_details.get('usedSpaceInBytes', '0'))
+            if 'usedSpaceInBytes' in source_details
+            else convert_used_space_to_bytes(source_details.get('usedSpace', '0'))
+        )
 
+        target_space_in_bytes = (
+            int(target_details.get('usedSpaceInBytes', '0'))
+            if 'usedSpaceInBytes' in source_details
+            else convert_used_space_to_bytes(target_details.get('usedSpace', '0'))
+        )
         space_difference = source_space_in_bytes - target_space_in_bytes
+
 
         if space_difference > 0:
             repos_with_space_difference.append(repo_key)
@@ -108,8 +148,6 @@ def generate_comparison_output(repo_details_of_interest, args):
                 if source_space_in_bytes > threshold_bytes:
                     big_source_repos.append(repo_key)
 
-
-            
         source_repo_type = source_details.get('repoType', 'N/A')
         target_repo_type = target_details.get('repoType', 'N/A')
 
