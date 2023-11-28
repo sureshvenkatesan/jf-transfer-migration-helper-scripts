@@ -147,7 +147,7 @@ target=ncratleostest
 REPO=third-party-docker-aquasec-enforcer-proxy
 jf rt curl api/repositories/$REPO --server-id=$source >> $target/creating-missing-remote-repos/$REPO-config.json
 
-You may need to fix the "password". Just tio create the remote repo you can set it to `"password" : "password"` and change the password after repo creation:
+You may need to fix the "password". Just to create the remote repo you can set it to `"password" : "password"` and change the password after repo creation:
 
 jf rt curl  -X PUT api/repositories/$REPO -H "Content-Type: application/json" -T $target/creating-missing-remote-repos/$REPO-config.json --server-id=$target -s 
 ```
@@ -155,7 +155,7 @@ jf rt curl  -X PUT api/repositories/$REPO -H "Content-Type: application/json" -T
 
 5. Now create the missing virtual repos in the target:
 
-shell command to read all lines in a file and print them in a single line with a semi-colon seperator
+shell command to read all lines in a file and print them in a single line with a semi-colon separator
 ```
 tr '\n' ';' < ncr/found_in_all_virtual_repos_in_ncr.txt.txt
 jf rt transfer-config-merge --include-repos "<Semi-colon seperated list of repos>" ncr ncratleostest

@@ -137,7 +137,7 @@ jf rt cp sureshv-liquid-generic/test/  liquid/ --flat=false --threads=8 --dry-ru
 
 But we know that for the big folders  like `sureshv-liquid-generic/BoseCorp/` and `sureshv-liquid-generic/conan-center-index/`  it will fail.
 
-For this or any root-folder to copy the subfolders recurseively I have the 
+For this or any root-folder to copy the subfolders recursively I have the 
 [copy_subfolders_in_given_root_folder_from_source_repo_to_generic_target_repo_in_parallel.sh](copy_sub_folders_in_parallel/copy_subfolders_in_given_root_folder_from_source_repo_to_generic_target_repo_in_parallel.sh) script as mentioned in 
 [copy_sub_folders_in_parallel/readme.md](copy_sub_folders_in_parallel/readme.md)
 
