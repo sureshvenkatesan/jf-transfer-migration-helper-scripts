@@ -62,8 +62,7 @@ It fails with:
 ```
 Another issue is RTFACT-22800 - filelist gets progressively slower the larger a repository gets
 
-To overcome these  issues I reviewed the  [transfer.sh](https://git.jfrog.
-info/projects/PROFS/repos/ps_jfrog_scripts/browse/transfer-artifacts/transfer.sh) , but that will also not work for this monorepo. 
+To overcome these  issues I reviewed the  [transfer.sh](https://git.jfrog.info/projects/PROFS/repos/ps_jfrog_scripts/browse/transfer-artifacts/transfer.sh) , but that will also not work for this monorepo. 
 
 So I improved on the the `transfer.sh` and wrote this [migrate_n_subfolders_in_parallel.sh](transfer-artifacts-in-sub_folders_in_parallel/migrate_n_subfolders_in_parallel.sh) Bash script which can :
 - migrate artifacts in the above mentioned monorepo from the source Artifactory instance to the target Artifactory instance as it supports migrating files and subfolders by traversing the tree recursively until it finds the leaf folder and then works it way up the tree. 
@@ -159,4 +158,4 @@ screen -dmS upload-session9 bash -c '/app/sureshv/migrate_n_subfolders_in_parall
 For this customer using this script I was able to transfer `400 GB` of artifacts in the `merlin` repo per day.
 
 Then by using the  [generate_screen_commands_for_subfolders/generate_screen_commands_for_subfolders.py](generate_screen_commands_for_subfolders/generate_screen_commands_for_subfolders.py) script as explained in
-[generate_screen_commands_for_subfolders](generate_screen_commands_for_subfolders) , which generates a bash script to  run this `migrate_n_subfolders_in_parallel.sh` script for 18 subfolders in parallel   , I was able to transfer almost `2 TB` ( approximately 1.5 million artifacts) per day.
+[generate_screen_commands_for_subfolders](generate_screen_commands_for_subfolders) , which generates a bash script to  run this [migrate_n_subfolders_in_parallel.sh](transfer-artifacts-in-sub_folders_in_parallel/migrate_n_subfolders_in_parallel.sh) script for 18 subfolders in parallel   , I was able to transfer almost `2 TB` ( approximately 1.5 million artifacts) per day.
