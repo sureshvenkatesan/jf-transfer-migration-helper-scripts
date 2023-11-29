@@ -30,7 +30,7 @@ rm -rf *.json
 # Set the source Artifactory server
 jf config use "${source_server}"
 
-# Define cron settings
+# Define cron settings. .The below schedules replication for all repos 2 minutes apart
 max=60
 maxhr=24
 cronmin=0

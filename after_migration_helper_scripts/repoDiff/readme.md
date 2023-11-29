@@ -94,6 +94,7 @@ already contains the last download statistics under "artifactory.stats." Therefo
 ```
 ---
 Behind the scenes:
+
 I initially experimented with below scripts  which were imporvised from 
 [replicationDiff.sh](https://github.com/jfrog/artifactory-scripts/blob/master/replicationDiff/replicationDiff.sh) 
 
