@@ -40,9 +40,9 @@ filepaths_uri_lastDownloaded_desc.txt: It includes a list of URIs for artifacts 
 
 ```
 
-Alternative scripts/plugin:
-https://git.jfrog.info/projects/PROFS/repos/ps_jfrog_scripts/browse/compare_repos
-https://git.jfrog.info/projects/PROFS/repos/jfrog-cli-plugin-compare/browse
+## Alternative scripts/plugin:
+- https://git.jfrog.info/projects/PROFS/repos/ps_jfrog_scripts/browse/compare_repos
+- https://git.jfrog.info/projects/PROFS/repos/jfrog-cli-plugin-compare/browse
 
 ---
 Note:
