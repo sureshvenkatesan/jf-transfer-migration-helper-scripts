@@ -63,7 +63,7 @@ So you'll need to create repositories from the following output files:
 
 ---
 
-3. Create the "local" repos in target Artifactory using the [create-repos.sh](https://github.com/shivaraman83/security-entities-migration/blob/main/create-repos.sh) script .
+3. Create the "local" repos in target Artifactory using the [create-repos-during-migration.sh](create-repos-during-migration.sh) script ( improved from  [create-repos.sh](https://github.com/shivaraman83/security-entities-migration/blob/main/create-repos.sh) )script .
 You can run a modified script  to create the repos from ncr/found_in_all_local_repos_in_ncr.txt in the target artifactory , NCRAtleos :
 ```
 cd /Users/sureshv/Documents/From_Customer/ncr/jpds
