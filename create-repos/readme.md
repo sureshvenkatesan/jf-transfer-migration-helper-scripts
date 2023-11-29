@@ -1,35 +1,39 @@
-1. Ask customer for the list of repos to sync in phase1 as syncing all the repos from source to target will take time.
-Customer gave us the 1-High_priority_repos.txt.  Verify if all the repos are in the source artifactory so that it can be created in the target.
+1. Request the customer to provide a list of repositories for synchronization during phase 1. This approach is recommended because transferring all repositories (especially if there are hundreds of them) from the source (refered to as NCR) to the target Artifactory instance ( refered to NCRAtleos) is a time-consuming process.
 
-The 1-High priority repos:
+Customer gave us the `NCRAtleos_HighPriorityRepositories_All.08222023`.  
+Sort the  NCRAtleos_HighPriorityRepositories_All.08222023 repos:
 ```
-sort -o 1-High_priority_repos.txt 1-High_priority_repos.txt
+sort -o ncr/NCRAtleos_HighPriorityRepositories_All.08222023 ncr/NCRAtleos_HighPriorityRepositories_All.08222023
 ```
 
-Get all the repo names in source:
+Verify if all repos in  NCRAtleos_HighPriorityRepositories_All.08222023 are present the source Artifactory so that it can be created in the target Artifactory.
+
+a) Get all the repo names in source Artifactory JPD:
 ```
 jf c use ncr
 jf rt curl /api/repositories   | jq -r '.[] | .key' >> ncr/all_repositories.list
 sort -o ncr/all_repositories.list ncr/all_repositories.list
 ```
 
-I have 2 files with the lines sorted.  How to find out if all the lines in the  small file is in the big file  . If there are any lines that  are not in the big file I want to get those  lines:
 
-*comm* utility has the -23 option to suppress the output of lines unique to the first file (-2) and lines that are common between both files (-1), resulting in only the lines unique to the first file.
+The `comm` utility provides the `-23` option, which serves to suppress the output of lines unique to the first file (-2) and lines common to both files (-1). This results in displaying only the lines that are unique to the first file.
 
-Note: comm utility has the -12 option suppresses the output of lines unique to FILE1 (-1) and lines unique to FILE2 (-2), leaving only the lines that are common between both files.
+Additionally, it's worth noting that the `comm` utility offers the `-12` option, which suppresses the output of lines unique to FILE1 (-1) and lines unique to FILE2 (-2), retaining only the lines that are common between both files.
 
-```
-sort -o ncr/NCRAtleos_HighPriorityRepositories_All.08222023 ncr/NCRAtleos_HighPriorityRepositories_All.08222023
-```
-Check if any of these repos are missing from ncr/all_repositories.list
+To check for the absence of any of these repositories in the `ncr/all_repositories.list`, I have verified that there are no repositories in the `ncr/NCRAtleos_HighPriorityRepositories_All.08222023` file that are not present in `ncr/all_repositories.list` using the following command:
 
-I verified that there are no   repos in ncr/NCRAtleos_HighPriorityRepositories_All.08222023 that are not in ncr/all_repositories.list using:
-```
-comm -23 <(sort ncr/NCRAtleos_HighPriorityRepositories_All.08222023) <(sort ncr/all_repositories.list)  
+```bash
+comm -23 <(sort ncr/NCRAtleos_HighPriorityRepositories_All.08222023) <(sort ncr/all_repositories.list)
 ```
 
-You many also need to extract the local, remote , virtual repos as seperate lists using the following:
+This command compares the sorted contents of the two files and returns the repositories that exist in `NCRAtleos_HighPriorityRepositories_All.08222023` but are missing in `all_repositories.list`.
+
+---
+
+2. Bucket the high priority repos NCRAtleos_HighPriorityRepositories_All.08222023 we got from customer 
+into local, remote and virtual.
+
+For this extract the local, remote , virtual repos from the source Artifactory as seperate lists using the following:
 ```
 jf c use ncr
 jf rt curl  -X GET "/api/repositories?type=local"  | jq -r '.[] | .key' >> ncr/all_local_repos_in_ncr.txt
@@ -42,29 +46,25 @@ jf rt curl  -X GET "/api/repositories?type=virtual"  | jq -r '.[] | .key' >> ncr
 sort -o ncr/all_virtual_repos_in_ncr.txt ncr/all_virtual_repos_in_ncr.txt
 ```
 
----
+Utilize the [find_repos_in_files_and_bucket_by_type.py](find_repos_in_files_and_bucket_by_type.py) script to extract each repository name from an input file. If the repository name is found in any of the three repository type lists, which are ["all_local_repos_in_ncr.txt", "all_remote_repos_in_ncr.txt", "all_virtual_repos_in_ncr.txt"], you should categorize and store them in corresponding files named "found_in_all_local_repos_in_ncr.txt," "found_in_all_remote_repos_in_ncr.txt," and "found_in_all_virtual_repos_in_ncr.txt."
 
-2. Bucket the high priority repos NCRAtleos_HighPriorityRepositories_All.08222023 we got from customer 
-into local, remote and virtual.
+To achieve this, you can execute the following Python script:
 
-Use [find_repos_in_files_and_bucket_by_type.py](find_repos_in_files_and_bucket_by_type.py) to read each repo name from a input file.
-If the repo is in any of the  3 repo types file list i.e ["all_local_repos_in_ncr.txt", "all_remote_repos_in_ncr.txt", "all_virtual_repos_in_ncr.txt"]
-you can bucket them in  found_in_<filename>.txt , where the <filename> is the name of the 3 repo types files :
-
-```
-python find_repos_in_files_and_bucket_by_type.py
-```
-Since the customer gave us only the local and virtual repo names , we need to create the repos from:
-```
-ncr/found_in_all_local_repos_in_ncr.txt
-ncr/found_in_all_virtual_repos_in_ncr.txt
+```python
+cd ncr
+python find_repos_in_files_and_bucket_by_type.py NCRAtleos_HighPriorityRepositories_All.08222023 all_local_repos_in_ncr.txt all_remote_repos_in_ncr.txt all_virtual_repos_in_ncr.txt
 ```
 
+So you'll need to create repositories from the following output files:
+
+1. `ncr/found_in_all_local_repos_in_ncr.txt`
+2. `ncr/found_in_all_remote_repos_in_ncr.txt`
+3. `ncr/found_in_all_virtual_repos_in_ncr.txt`
 
 ---
 
-3. Create the "local" repos in target RT using the [create-repos.sh](https://github.com/shivaraman83/security-entities-migration/blob/main/create-repos.sh) script .
-You can run a modified script  to create the repos from ncr/found_in_all_local_repos_in_ncr.txt in the target artifactory , ncratleostest :
+3. Create the "local" repos in target Artifactory using the [create-repos.sh](https://github.com/shivaraman83/security-entities-migration/blob/main/create-repos.sh) script .
+You can run a modified script  to create the repos from ncr/found_in_all_local_repos_in_ncr.txt in the target artifactory , NCRAtleos :
 ```
 cd /Users/sureshv/Documents/From_Customer/ncr/jpds
 source=ncr
@@ -88,21 +88,18 @@ done
 or
 
 It can be created just using the "jf rt transfer-config-merge" .
-Not sure if reducing the  transfer-settings from 8 to  1 is needed as it seems to work with 8 as well.
 
-You cna use shell command to read all lines in a file and print them in a single line with a semi-colon seperator
-```
-tr '\n' ';' < ncr/found_in_all_local_repos_in_ncr.txt.txt
-```
 
-Then use it in:
+You can use shell command to read all lines in a file and print them in a single line with a semi-colon seperator
 ```
-jf rt transfer-config-merge --include-repos "<Semi-colon seperated list of repos>" ncr ncratleostest
+semicolon_separated_list_of_repos=$(tr '\n' ';' < ncr/found_in_all_local_repos_in_ncr.txt)
+
+jf rt transfer-config-merge ncr ncratleostest --include-repos "$semicolon_separated_list_of_repos" --include-projects ""
 ```
 
 ---
 
-4. Create all required remote repos in the target RT
+4. Create all required remote repos in the target Artifactory
 
 First find out the remotes in 
 ```
@@ -119,7 +116,7 @@ comm -23 <(sort ncr/all_remote_repos_in_ncr.txt) <(sort "$target/all_remote_repo
 ```
 You can do it using "transfer-config-merge":
 ```
-jf rt transfer-config-merge --include-repos "third-party-docker-aquasec-enforcer-proxy" ncr ncratleostest
+jf rt transfer-config-merge ncr ncratleostest --include-repos "third-party-docker-aquasec-enforcer-proxy"  
 ```
 
 If it  fails with:
@@ -138,7 +135,7 @@ If it  fails with:
 ```
 
 
-then just export the repo config and import them.
+then, just export the repo config and import them.
 ```
 cd /Users/sureshv/Documents/From_Customer/ncr/jpds
 source=ncr
@@ -157,8 +154,8 @@ jf rt curl  -X PUT api/repositories/$REPO -H "Content-Type: application/json" -T
 
 shell command to read all lines in a file and print them in a single line with a semi-colon separator
 ```
-tr '\n' ';' < ncr/found_in_all_virtual_repos_in_ncr.txt.txt
-jf rt transfer-config-merge --include-repos "<Semi-colon seperated list of repos>" ncr ncratleostest
+semicolon_separated_list_of_repos=$(tr '\n' ';' < ncr/found_in_all_virtual_repos_in_ncr.txt)
+jf rt transfer-config-merge ncr ncratleostest --include-repos "$semicolon_separated_list_of_repos"  --include-projects ""
 ```
 
 
@@ -280,42 +277,13 @@ python compare_repo_list_details_in_source_vs_target_rt_after_migration.py --sou
 
 
 
-13. Then for each repo you can find the diff i.e files in source repo that is not in target repo :
-I initially experimented with below scripts ( in [repoDiff](repoDiff) ) which were imporvised from 
+13. Then for each repo you can find the diff i.e files in source repo that is not in target repo  using the convenient python script [repodiff.py](../after_migration_helper_scripts/repoDiff/repodiff.py):
+that is imporvised from 
 [replicationDiff.sh](https://github.com/jfrog/artifactory-scripts/blob/master/replicationDiff/replicationDiff.sh) 
 
-On mac:
-```
-bash ./replicationDiff_jf_modular_w_comm_v3.sh ncr ncratleostest fsg-th-docker-snapshots fsg-th-docker-snapshots
-```
-
-On linux:
-```
-bash ./replicationDiff_jf_modular_w_diff_v2.sh ncr ncratleostest fsg-th-docker-snapshots fsg-th-docker-snapshots
-bash ./replicationDiff_jf_modular_w_jq_v4.sh ncr ncratleostest fsg-th-docker-snapshots fsg-th-docker-snapshots
-bash ./replicationDiff_with_jf.sh ncr ncratleostest fsg-th-docker-snapshots fsg-th-docker-snapshots
-```
-
-
-Finally came up with this convenient python script [repodiff.py](repoDiff/repodiff.py):
 
 ```
 python repodiff.py --source-artifactory ncr --target-artifactory ncratleostest --source-repo fsg-th-docker-snapshots --target-repo fsg-th-docker-snapshots
-```
-
-Helper commands:
-```
-Both the following grep commands were slow on my mac to check for files not containing "-202" in the file name in the 4 MB filepaths_nometadatafiles.txt:
-
-uses regex:
-grep -v "-202" filepaths_nometadatafiles.txt
-and
-The -F flag for grep can be used to treat the search pattern as a fixed string (rather than a regular expression)
-grep -vF "-202" filepaths_nometadatafiles.txt
-
-Instead this is fast , tells awk to print all lines from the file that do not match the pattern "-202".:
-awk '!/-202/' filepaths_nometadatafiles.txt 
-
 ```
 
 14. If you have to delete the artifacts in a huge repo , so you can start over the transfer-files for the repo you can use
@@ -325,4 +293,7 @@ bash ./delete_artifacts_in_repo_in_batches.sh <repo_name> <total_artifacts_to_de
 Example:
 bash ./delete_artifacts_in_repo_in_batches.sh example-repo-local 1000 ncr
 ```
+
+---
+
 

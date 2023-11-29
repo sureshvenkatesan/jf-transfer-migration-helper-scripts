@@ -40,11 +40,6 @@ filepaths_uri_lastDownloaded_desc.txt: It includes a list of URIs for artifacts 
 
 ```
 
-Print all lines from the file that do not match the pattern "-202":
-```
-awk '!/-202/' filepaths_nometadatafiles.txt
-```
-
 Alternative scripts/plugin:
 https://git.jfrog.info/projects/PROFS/repos/ps_jfrog_scripts/browse/compare_repos
 https://git.jfrog.info/projects/PROFS/repos/jfrog-cli-plugin-compare/browse
@@ -97,3 +92,37 @@ already contains the last download statistics under "artifactory.stats." Therefo
   } ]
 }
 ```
+---
+Behind the scenes:
+I initially experimented with below scripts  which were imporvised from 
+[replicationDiff.sh](https://github.com/jfrog/artifactory-scripts/blob/master/replicationDiff/replicationDiff.sh) 
+
+On mac:
+```
+bash ./replicationDiff_jf_modular_w_comm_v3.sh ncr ncratleostest fsg-th-docker-snapshots fsg-th-docker-snapshots
+```
+
+On linux:
+```
+bash ./replicationDiff_jf_modular_w_diff_v2.sh ncr ncratleostest fsg-th-docker-snapshots fsg-th-docker-snapshots
+bash ./replicationDiff_jf_modular_w_jq_v4.sh ncr ncratleostest fsg-th-docker-snapshots fsg-th-docker-snapshots
+bash ./replicationDiff_with_jf.sh ncr ncratleostest fsg-th-docker-snapshots fsg-th-docker-snapshots
+```
+
+
+Finally came up with the above  convenient python script [repodiff.py](repodiff.py):
+
+---
+
+Print all lines from the file that do not match the pattern "-202":
+```
+awk '!/-202/' filepaths_nometadatafiles.txt
+```
+Note:
+Both the following grep commands were slow on my mac to check for files not containing "-202" in the file name in the 4 MB filepaths_nometadatafiles.txt:
+
+uses regex:
+grep -v "-202" filepaths_nometadatafiles.txt
+and
+The -F flag for grep can be used to treat the search pattern as a fixed string (rather than a regular expression)
+grep -vF "-202" filepaths_nometadatafiles.txt
