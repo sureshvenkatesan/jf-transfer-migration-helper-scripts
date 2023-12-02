@@ -1,7 +1,11 @@
 # Artifactory Repository Data Comparison
 
-This Python script is designed to compare two repositories in Artifactory and find the artifacts that exist in the source repository but are missing in the target repository. It fetches data from both repositories, compares the URIs, and generates reports of missing artifacts and statistics.
-It has same login as the original script in 
+The [repodiff.py](repodiff.py) is designed to compare two repositories in different JFrog Artifactory instances and 
+identifies 
+artifacts present 
+in the source repository but missing in the target repository. It also provides additional features such as extracting and sorting artifact statistics and filtering unwanted files.
+
+It has same logic as the original script in 
 https://github.com/jfrog/artifactory-scripts/blob/master/replicationDiff/replicationDiff.sh
 and uses the jfrog cli to connect to Artifactory.
 
@@ -24,21 +28,25 @@ Before running the script, ensure you have the following prerequisites:
    python repodiff.py --source-artifactory SOURCE_ARTIFACTORY_ID --target-artifactory TARGET_ARTIFACTORY_ID --source-repo SOURCE_REPOSITORY_NAME --target-repo TARGET_REPOSITORY_NAME
 ```
 
-The script will fetch data from both repositories, compare URIs, and generate reports in the test/output directory.
+The repodiff.py will perform the following actions:
+
+- Fetch artifact information from the source and target repositories.
+- Identify artifacts present in the source repository but missing in the target repository.
+- Calculate the total size of missing artifacts.
+- Write various output files with the results, including lists of unique URIs and statistics in the `test/output`  directory.
 
 ## Output
 
 The script generates the following output files:
-```
-cleanpaths.txt: Contains the URIs of artifacts present in the source repository but missing in the target repository. It also provides statistics on the total size and file extensions.
 
-filepaths_uri.txt: Contains the URIs with the source repository prefix.
+- **cleanpaths.txt**: Contains the URIs of artifacts present in the source repository but missing in the target repository. It also provides statistics on the total size and file extensions.
 
-filepaths_nometadatafiles.txt: Contains the URIs without unwanted files, such as metadata files.
+- **filepaths_uri.txt**: Contains the URIs with the source repository prefix for missing artifacts.
 
-filepaths_uri_lastDownloaded_desc.txt: It includes a list of URIs for artifacts that exist in the source repository but are absent in the target repository. These URIs are accompanied by their download statistics, sorted in descending order based on the lastDownloaded timestamp in UTC. If an artifact has never been downloaded, its timestamp defaults to "January 1, 1900" in UTC.
+- **filepaths_nometadatafiles.txt**: Contains the URIs without unwanted files, such as metadata files.
 
-```
+- **filepaths_uri_lastDownloaded_desc.txt**: Contains a list of unique URIs for missing artifacts. These URIs are accompanied by their download statistics ( from "artifactory.stats" ) , 
+  sorted in descending order of lastDownloaded timestamp in UTC. If an artifact has never been downloaded,  a default timestamp of **"Jan 1, 1900, 00:00:00 UTC"** is used.
 
 ## Alternative scripts/plugin:
 - https://git.jfrog.info/projects/PROFS/repos/ps_jfrog_scripts/browse/compare_repos

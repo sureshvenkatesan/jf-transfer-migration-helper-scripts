@@ -9,7 +9,7 @@
 # mean you as an individual as well as the organization on behalf of which you
 # are using the software and the JFrog product or service.
 
-### sample cmd to run - ./create-repos-during-migration.sh source-server target-server remote "air-gapped-npm-remote;sv-docker-remote"
+### sample cmd to run - ./create-repos-during-migration.sh source-server target-server remote "acme-helm-bitnami-remote;ad-npm-remote" "ad-nuget-remote;alex-docker"
 
 ### Exit the script on any failures
 ## define variables
@@ -27,23 +27,20 @@ reposfile="repositories.list"
 rm -rf repositories.list
 rm -rf *config.json
 
-jf config use ${source}
 
-### Run the curl API
-jf rt curl api/repositories?type=${TYPE} -s | jq -rc '.[] | .key' > $reposfile
+### Get the reposiotory list
+for REPO in $(jf rt curl "api/repositories?type=${TYPE}" -s --server-id=$source | jq -r '.[].key'); do
 
-cat $reposfile |  while read line
-do
-    REPO=$(echo $line | cut -d ':' -f 2)
     echo "Getting configuration for "$REPO
-
-    if [[ -n "$excluderepos" ]] && [[ "$excluderepos" == *$REPO* ]]; then
+    # Check if the repository is in the exclusion list
+    if [[ -n "$excluderepos" ]] && [[ "$excluderepos" =~ (^|;)${REPO}(;|$) ]]; then
         echo "Skipping excluded Repo" $REPO
-    # elif [[ -n "$includerepos" ]] && [[ "$includerepos" != *$REPO* ]]; then
+    # Check if the repository is not in the inclusion list
     elif [[ -n "$includerepos" ]] && [[ ! "$includerepos" =~ (^|;)${REPO}(;|$) ]]; then
         echo "Skipping Repo not in includerepos" $REPO
     else
-        jf rt curl api/repositories/$REPO >> $REPO-config.json
+        # If not excluded or not in the exclusion list, execute the desired actions for the repository
+        jf rt curl api/repositories/$REPO --server-id=$source >> $REPO-config.json
         echo creating repo -- $REPO on $target
 
         # Check if "rclass" is "remote" and "password" is not empty, replace "password" with ""

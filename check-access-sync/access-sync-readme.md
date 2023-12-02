@@ -140,6 +140,7 @@ sort -o ncratleostest/token.list ncratleostest/token.list
 ```
 
 ---
+
 5. Give  the modifed  access.bootstrap.json back to the PE team as mentioned in the document , so PE team can import it in the target instance.
 
 Note: If these domain changes are not needed we could have done Access Federation in star mode to sync Access from source to target Artifactory.
@@ -150,6 +151,7 @@ mv access.bootstrap_b4_domain_change.json access.bootstrap_after_domain_change.j
 ```
 
 
-There are some more steps to encrypt the `access.bootstrap_after_domain_change.json` and rename to `access.bootstrap.json` as  mentioned in the document, so that the PE team can use it.
+There are some more steps to encrypt the `access.bootstrap_after_domain_change.json` and rename to `access.bootstrap.json` as  mentioned in the [Access import/export](https://docs.google.com/document/d/1n6F1nfCfwJPlR2FlGXeqWTwYFabAZMHiKjRnpPnQ6wk/edit#heading=h.35mueprt0t2o) document, so that the PE team can use it.
+
 --- 
 
