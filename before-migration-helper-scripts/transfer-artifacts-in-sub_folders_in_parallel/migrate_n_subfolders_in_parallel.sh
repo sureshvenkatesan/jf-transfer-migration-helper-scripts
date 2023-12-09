@@ -165,7 +165,8 @@ run_migrate_command() {
         # join -v1  <(sort "$a") <(sort "$b") | sed -E -e 's/,[[:alnum:]]+"$/"/g' -e 's/"//g' -e '/(index\.json|\.timestamp|conanmanifest\.txt)$/d' > "$c"
         echo "In $(pwd) comparing - $a    to   $b"
         # join -v1  <(sort "$a") <(sort "$b") | sed -E -e 's/,[[:alnum:]]+"$/"/g' -e 's/"//g'  > "$c"
-        comm -23 <(sort "$a") <(sort "$b") | sed -E -e 's/,[[:alnum:]]+"$/"/g' -e 's/"//g'  > "$c"
+        # comm -23 <(sort "$a") <(sort "$b") | sed -E -e 's/,[[:alnum:]]+"$/"/g' -e 's/"//g'  > "$c"
+        comm -23 <(sort "$a") <(sort "$b") | awk '{gsub(/,[[:alnum:]]+\"$/, "\""); gsub(/"/, ""); print}' > "$c"
         # Check if the file exists and is not empty
         if [ -s "$c" ]; then
             if [ "${TRANSFERONLY}" = "no" ]; then
@@ -256,6 +257,8 @@ run_migration_for_folder() {
 }
 
 migrateFolderRecursively(){
+# Enable debugging
+#set -x
  # Define a stack to keep track of folders to process
 folder_stack=("$1")
 
@@ -307,15 +310,17 @@ while [ ${#folder_stack[@]} -gt 0 ]; do
                     folder_to_migrate="$l_root_folder/$folder"
                 fi
                 # folder_to_migrate="$l_root_folder/$folder"
+                echo "Push the subfolder {$folder_to_migrate} onto the stack for processing ..."
                 folder_stack+=("$folder_to_migrate")
             fi
         done
-    else 
-         echo "no this is the leaf folder......"
+    elif [ "$total_folders" -eq 1 ]; then
+        echo "$l_root_folder is the level1 folder under root . So process its subfolders ......"
         for folder_position in "${!folders_array[@]}"; do
             folder="${folders_array[$folder_position]}"
             #Remove the leading slash i.e if folder is "/abc" it becomes "abc"
             folder="${folder#/}"
+            echo "Processing the leaf folder {$folder}......"
             if [ -n "$folder" ]; then # folder is not null
                 # Check if the folder name is ".conan" and skip it as it will be generated
                 if [[ "$EXCLUDE_FOLDERS" == *";$folder;"* ]]; then
@@ -329,18 +334,27 @@ while [ ${#folder_stack[@]} -gt 0 ]; do
                     folder_to_migrate="$l_root_folder/$folder"
                 fi
 
-                # echo "Processing folder: $folder_to_migrate"
+                echo "Processing folder: $folder_to_migrate"
                 processLeafFolderContents "$folder_to_migrate"
             fi
         done
+        echo "$l_root_folder is the level1 folder under root . So migrate the files in this folder......"
+        echo "Processing folder: $l_root_folder"
+        processLeafFolderContents "$l_root_folder"
+    elif [ "$total_folders" -eq 0 ]; then
+          echo "$l_root_folder is the level1 folder of a root folder and only has files i.e does not contain subfolders......So migrate the files in this folder......"
+          echo "Processing folder: $l_root_folder"
+          processLeafFolderContents "$l_root_folder"
     fi
 done
+# Disable debugging (optional)
+#set +x
 }
 
 processLeafFolderContents() {
     local folder_to_migrate="$1"  
 
-    # echo " In processLeafFolderContents folder_to_migrate is '$folder_to_migrate'"
+    echo " In processLeafFolderContents folder_to_migrate is '$folder_to_migrate'"
 
     # migrate files in the sub-folder
     src_command1="jf rt curl -s -XPOST -H 'Content-Type: text/plain' api/search/aql --server-id $source_artifactory --insecure \
