@@ -33,7 +33,7 @@ This `merlin` mono-repo has 23.48 TB data  and 9.5 million artifacts.
 
 Another `liquid` monorepo which is only 1.61 TB has simlar issue ( most of the artifacts are under ` liquid/BoseCorp/`)  and so following fails :
 ```
-jf rt cp liquid/BoseCorp/  sureshv-liquid-generic/ --flat=false --threads=8 --dry-run=false --server-id bosesh
+jf rt cp liquid/BoseCorp/  sureshv-liquid-generic/ --flat=false --threads=8 --dry-run=false --server-id YOUR_RT_SERVERID
 ```
 
 It fails with:
@@ -44,11 +44,11 @@ It fails with:
 15:23:08 [Debug] Usage Report: Sending info...
 15:23:08 [Debug] Searching Artifactory using AQL query:
  items.find({"type":"any","path":{"$ne":"."},"$or":[{"$and":[{"repo":"liquid","path":"BoseCorp","name":{"$match":"*"}}]},{"$and":[{"repo":"liquid","path":{"$match":"BoseCorp/*"},"name":{"$match":"*"}}]}]}).include("name","repo","path","actual_md5","actual_sha1","sha256","size","type","modified","created")
-15:23:08 [Debug] Sending HTTP POST request to: https://rtf.bose.com/artifactory/api/search/aql
-15:23:08 [Debug] Sending HTTP GET request to: https://rtf.bose.com/artifactory/api/system/version
+15:23:08 [Debug] Sending HTTP POST request to: https://xyz.jfrog.io/artifactory/api/search/aql
+15:23:08 [Debug] Sending HTTP GET request to: https://xyz.jfrog.io/artifactory/api/system/version
 15:23:08 [Debug] Artifactory response: 200 OK
 15:23:08 [Debug] JFrog Artifactory version is: 7.41.14
-15:23:08 [Debug] Sending HTTP POST request to: https://rtf.bose.com/artifactory/api/system/usage
+15:23:08 [Debug] Sending HTTP POST request to: https://xyz.jfrog.io/artifactory/api/system/usage
 15:23:09 [Debug] Usage Report: Usage info sent successfully. Artifactory response: 200 OK
 
 15:24:09 [Debug] Artifactory response: 200 OK
@@ -60,8 +60,9 @@ It fails with:
 15:35:44 [🚨Error] copy finished with errors, please review the logs
 15:35:44 [🚨Error] copy finished with errors, please review the logs
 ```
+Another issue is RTFACT-22800 - filelist gets progressively slower the larger a repository gets.
 
-To overcome this issue I reviewd the  [transfer.sh](https://git.jfrog.info/projects/PROFS/repos/ps_jfrog_scripts/browse/transfer-artifacts/transfer.sh) , but that will also not work for this monorepo. 
+To overcome these  issues I reviewed the  [transfer.sh](https://git.jfrog.info/projects/PROFS/repos/ps_jfrog_scripts/browse/transfer-artifacts/transfer.sh) , but that will also not work for this monorepo. 
 
 So I improved on the the `transfer.sh` and wrote this [migrate_n_subfolders_in_parallel.sh](migrate_n_subfolders_in_parallel.sh) Bash script which can :
 - migrate artifacts in the above mentioned monorepo from the source Artifactory instance to the target Artifactory instance as it supports migrating files and subfolders by traversing the tree recursively until it finds the leaf folder and then works it way up the tree. 
@@ -71,7 +72,7 @@ So I improved on the the `transfer.sh` and wrote this [migrate_n_subfolders_in_p
 ## Usage
 
 ```bash
-./migrate_n_subfolders_in_parallel.sh <source-artifactory> <source-repo> <target-artifactory> <target-repo> <transfer yes/no> [root-folder] [migrateFolderRecursively yes/no] [semicolon-separated exclude_folders]
+./migrate_n_subfolders_in_parallel.sh <source-artifactory-serverid> <source-repo> <target-artifactory-serverid> <target-repo> <transfer yes/no> [root-folder] [migrateFolderRecursively yes/no] [semicolon-separated exclude_folders]
 ```
 
 - source-artifactory: The source Artifactory instance.
@@ -79,9 +80,9 @@ So I improved on the the `transfer.sh` and wrote this [migrate_n_subfolders_in_p
 - target-artifactory: The target Artifactory instance.
 - target-repo: The target repository in the target Artifactory instance.
 - transfer yes/no: Specify 'yes' to transfer files or 'no' to perform other operations without transferring.
-- root-folder (optional): The root folder to start the migration from (default is the current directory).
-- migrateFolderRecursively yes/no (optional): Specify 'yes' to migrate subfolders recursively or 'no' to only migrate the root folder.
-- semicolon-separated exclude_folders (optional): List of folders to exclude from migration, separated by semicolons.
+- root-folder (optional): The root folder to start the migration from (default is the "." i.e the repositoy's root directory).
+- migrateFolderRecursively yes/no (optional): Specify 'yes' to migrate subfolders recursively or 'no' to only migrate the root folder (default is 'yes').
+- semicolon-separated exclude_folders (optional): List of folders to exclude from migration, separated by semicolons. ( default is ';.conan;')
 
 ## Prerequisites
 
@@ -125,36 +126,36 @@ All transfers for merlin completed
 
 ## Example:
 ```
-./migrate_n_subfolders_in_parallel.sh ncr ndce-releases ncratleostest ndce-releases yes
+./migrate_n_subfolders_in_parallel.sh <source-artifactory-serverid> <source-repo> <target-artifactory-serverid> <target-repo> yes
 ```
 
 
 You can also give a specific folder or file path , for example:
 ```
-./migrate_n_subfolders_in_parallel.sh ncr ndce-releases ncratleostest ndce-releases yes com/ncr/ndce/tools/ndce-host
+./migrate_n_subfolders_in_parallel.sh <source-artifactory-serverid> <source-repo> <target-artifactory-serverid> <target-repo> yes com/ncr/ndce/tools/ndce-host
 ```
 or
 ```
-./migrate_n_subfolders_in_parallel.sh ncr ndce-releases ncratleostest ndce-releases yes com/ncr/ndce/tools/ndce-host/ndce-host-.pom
+./migrate_n_subfolders_in_parallel.sh <source-artifactory-serverid> <source-repo> <target-artifactory-serverid> <target-repo> yes com/ncr/ndce/tools/ndce-host/ndce-host-.pom
 ```
 
-To migrate only the root folder run as:
+To migrate a specific folder "com/xyz/ndce/tools/ndce-host" recursively run as:
 ```
-./migrate_n_subfolders_in_parallel.sh ncr ndce-releases ncratleostest ndce-releases yes com/ncr/ndce/tools/ndce-host yes
+./migrate_n_subfolders_in_parallel.sh <source-artifactory-serverid> <source-repo> <target-artifactory-serverid> <target-repo> yes "com/xyz/ndce/tools/ndce-host" yes
 ```
 To exclude certain folders from transferring to target artifactory you can pass as 
 [semicolon-separated exclude_folders] as:
 ```
-./migrate_n_subfolders_in_parallel.sh ncr ndce-releases ncratleostest ndce-releases yes . yes "folder1;folder2"
+./migrate_n_subfolders_in_parallel.sh <source-artifactory-serverid> <source-repo> <target-artifactory-serverid> <target-repo> yes . yes "folder1;folder2"
 ```
 
 You can run it using screen utility using:
 ```
-screen -dmS upload-session9 bash -c '/app/sureshv/migrate_n_subfolders_in_parallel.sh usvartifactory5 merlin jfrogio merlin  yes   2>&1 | tee upload-session9.log; exec bash'
+screen -dmS upload-session9 bash -c '/app/sureshv/migrate_n_subfolders_in_parallel.sh <source-artifactory-serverid> <source-repo> <target-artifactory-serverid> <target-repo>  yes   2>&1 | tee upload-session.log; exec bash'
 ```
 
 
-For this customer using this script I was able to transfer `400 GB` of artifacts in the `merlin` repo per day.
+Using this script I was able to transfer `400 GB` of artifacts in the `<source-repo>` repository per day for one customer.
 
 Then by using the  [generate_screen_commands_for_subfolders/generate_screen_commands_for_subfolders.py](../generate_screen_commands_for_subfolders/generate_screen_commands_for_subfolders.py) script as explained in
 [generate_screen_commands_for_subfolders](../generate_screen_commands_for_subfolders) , which generates a bash script to  run this `migrate_n_subfolders_in_parallel.sh` script for 18 subfolders in parallel   , I was able to transfer almost `2 TB` ( approximately 1.5 million artifacts) per day.
